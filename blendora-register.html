@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Inscription Blendora</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:linear-gradient(135deg,#fdf2f8 0%,#ede9fe 50%,#e0f2fe 100%);min-height:100vh;padding:20px}
+.wrap{width:100%;max-width:520px;margin:0 auto}
+.header{text-align:center;padding:28px 0 20px}
+.logo{font-size:34px;margin-bottom:6px}
+.app-name{font-size:24px;font-weight:900;background:linear-gradient(135deg,#f43f5e,#ec4899,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.tagline{font-size:13px;color:#94a3b8;margin-top:3px}
+.steps{display:flex;align-items:center;justify-content:center;margin-bottom:24px}
+.step{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#cbd5e1}
+.step.active{color:#ec4899}
+.step.done{color:#10b981}
+.step-dot{width:24px;height:24px;border-radius:50%;background:#e2e8f0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0}
+.step.active .step-dot{background:linear-gradient(135deg,#f43f5e,#ec4899);color:#fff}
+.step.done .step-dot{background:#10b981;color:#fff}
+.step-line{width:32px;height:2px;background:#e2e8f0;margin:0 8px}
+.step-line.done{background:#10b981}
+.card{background:#fff;border-radius:20px;box-shadow:0 4px 24px rgba(0,0,0,.08);overflow:hidden;margin-bottom:12px}
+.evt-card{background:#fff;border-radius:18px;box-shadow:0 3px 16px rgba(0,0,0,.07);overflow:hidden;margin-bottom:12px;border:2px solid transparent;cursor:pointer;transition:all .2s}
+.evt-card:hover{border-color:#ec4899;box-shadow:0 6px 24px rgba(236,72,153,.15);transform:translateY(-2px)}
+.evt-card .banner{padding:16px 18px;background:linear-gradient(135deg,#f43f5e,#ec4899)}
+.evt-card.c1 .banner{background:linear-gradient(135deg,#7c3aed,#8b5cf6)}
+.evt-card.c2 .banner{background:linear-gradient(135deg,#2563eb,#3b82f6)}
+.evt-card.c3 .banner{background:linear-gradient(135deg,#0891b2,#06b6d4)}
+.evt-card .banner h3{color:#fff;font-size:16px;font-weight:800;margin-bottom:3px}
+.evt-card .banner .meta{color:rgba(255,255,255,.8);font-size:12px;display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.evt-card .body{padding:14px 18px}
+.evt-card .desc{font-size:13px;color:#64748b;font-style:italic;margin-bottom:10px}
+.evt-dates{display:flex;flex-wrap:wrap;gap:6px}
+.evt-date-chip{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:5px 10px;font-size:11px;color:#475569;font-weight:600}
+.select-btn{width:100%;margin-top:12px;padding:10px;background:linear-gradient(135deg,#f43f5e,#ec4899);color:#fff;border:none;border-radius:11px;font-weight:800;font-size:13px;cursor:pointer;transition:opacity .15s}
+.select-btn:hover{opacity:.9}
+.evt-card.c1 .select-btn{background:linear-gradient(135deg,#7c3aed,#8b5cf6)}
+.evt-card.c2 .select-btn{background:linear-gradient(135deg,#2563eb,#3b82f6)}
+.evt-card.c3 .select-btn{background:linear-gradient(135deg,#0891b2,#06b6d4)}
+.form-header{padding:18px 20px 0}
+.form-header h2{font-size:17px;font-weight:800;color:#1e293b}
+.form-header p{font-size:12px;color:#94a3b8;margin-top:3px}
+.back-btn{display:inline-flex;align-items:center;gap:5px;background:none;border:none;color:#94a3b8;font-size:12px;font-weight:700;cursor:pointer;padding:0;margin-bottom:8px}
+.back-btn:hover{color:#ec4899}
+.evt-banner{margin:14px 20px;border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;background:#fdf2f8;border:1.5px solid #fbcfe8}
+.evt-banner.c1{background:#ede9fe;border-color:#c4b5fd}
+.evt-banner.c2{background:#eff6ff;border-color:#bfdbfe}
+.evt-banner.c3{background:#ecfeff;border-color:#a5f3fc}
+.form-body{padding:6px 20px 20px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+.field input,.field select{width:100%;padding:11px 13px;border:1.5px solid #e2e8f0;border-radius:11px;font-size:14px;color:#1e293b;background:#f8fafc;outline:none;transition:border-color .2s}
+.field input:focus,.field select:focus{border-color:#ec4899;background:#fff}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.req{color:#ec4899}
+.dlabel{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:block}
+.date-opt{border:2px solid #e2e8f0;border-radius:12px;padding:12px 14px;margin-bottom:7px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:all .15s}
+.date-opt:hover{border-color:#ec4899;background:#fdf2f8}
+.date-opt.sel{border-color:#ec4899;background:linear-gradient(135deg,#fdf2f8,#ede9fe)}
+.date-opt input[type=radio]{width:16px;height:16px;accent-color:#ec4899;flex-shrink:0}
+.date-dl{font-weight:700;color:#1e293b;font-size:13px;text-transform:capitalize}
+.date-ds{font-size:11px;color:#94a3b8;margin-top:1px}
+.btn-submit{width:100%;padding:14px;background:linear-gradient(135deg,#f43f5e,#ec4899);color:#fff;border:none;border-radius:13px;font-size:15px;font-weight:800;cursor:pointer;transition:opacity .15s;margin-top:6px}
+.btn-submit:hover{opacity:.9}
+.btn-submit:disabled{opacity:.45;cursor:not-allowed}
+.err{background:#fff1f2;border:1.5px solid #fca5a5;border-radius:10px;padding:10px 14px;color:#e11d48;font-size:13px;font-weight:600;margin-bottom:12px;display:none}
+.success{text-align:center;padding:48px 24px}
+.success .icon{font-size:60px;margin-bottom:14px}
+.success h2{font-size:22px;font-weight:800;color:#1e293b;margin-bottom:8px}
+.success p{font-size:14px;color:#64748b;line-height:1.6}
+.success .tag{display:inline-block;margin-top:20px;background:#fdf2f8;border:1px solid #fbcfe8;border-radius:20px;padding:8px 18px;font-size:12px;color:#9d174d;font-weight:700}
+.noconf{text-align:center;padding:48px 24px}
+.loading{display:flex;align-items:center;justify-content:center;gap:10px;color:#ec4899;font-weight:600;font-size:14px;padding:40px}
+.spinner{width:20px;height:20px;border:2.5px solid #fce7f3;border-top-color:#ec4899;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <div class="logo">&#x1F491;</div>
+    <div class="app-name">Blendora</div>
+    <div class="tagline" id="headerTagline">Choisissez votre evenement</div>
+  </div>
+  <div class="steps" id="stepsBar">
+    <div class="step active" id="step1"><div class="step-dot">1</div><span>Evenement</span></div>
+    <div class="step-line" id="stepLine"></div>
+    <div class="step" id="step2"><div class="step-dot">2</div><span>Inscription</span></div>
+  </div>
+  <div id="mainContent">
+    <div class="loading"><div class="spinner"></div>Chargement...</div>
+  </div>
+</div>
+<script>
+var cfg = null;
+var selectedEvt = null;
+var selIdx = 0;
+var ICONS = ['&#x1F491;','&#x2728;','&#x1F31F;','&#x1F389;'];
+
+function loadConfig() {
+  var h = location.hash;
+  if(!h||!h.startsWith('#cfg=')) return null;
+  try{ return JSON.parse(decodeURIComponent(escape(atob(h.slice(5))))); }catch(e){ return null; }
+}
+
+function fmtDate(s){
+  try{ return new Date(s).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'}); }catch(e){ return s; }
+}
+function fmtShort(s){
+  try{ return new Date(s).toLocaleDateString('fr-FR',{day:'numeric',month:'short'}); }catch(e){ return s; }
+}
+
+function renderEventList(){
+  var evts = cfg.events||(cfg.event?[cfg.event]:[]);
+  if(!evts.length){
+    document.getElementById('mainContent').innerHTML='<div class="card"><div class="noconf"><div style="font-size:48px;margin-bottom:12px">&#x1F4ED;</div><div style="font-weight:700;color:#1e293b;font-size:15px;margin-bottom:6px">Aucun evenement disponible</div><div style="font-size:13px;color:#94a3b8">Aucun evenement ouvert pour le moment.</div></div></div>';
+    return;
+  }
+  var html='';
+  evts.forEach(function(evt,i){
+    var col=i%4===0?'':'c'+(i%4);
+    var chips=(evt.dates||[]).slice(0,4).map(function(d){return '<span class="evt-date-chip">'+fmtShort(d.date)+' '+d.heure+'</span>';}).join('');
+    html+='<div class="evt-card '+col+'" onclick="choisirEvent('+i+')">'+
+      '<div class="banner"><h3>'+evt.nom+'</h3>'+
+      '<div class="meta">'+(evt.lieu?'<span>&#x1F4CD; '+evt.lieu+'</span>':'')+
+      '<span>&#x1F5D3; '+(evt.dates||[]).length+' date'+(((evt.dates||[]).length)>1?'s':'')+'</span></div></div>'+
+      '<div class="body">'+(evt.description?'<div class="desc">'+evt.description+'</div>':'')+
+      '<div class="evt-dates">'+chips+'</div>'+
+      '<button class="select-btn">Choisir cet evenement &#x2192;</button></div></div>';
+  });
+  document.getElementById('mainContent').innerHTML=html;
+}
+
+function choisirEvent(idx){
+  var evts=cfg.events||(cfg.event?[cfg.event]:[]);
+  selectedEvt=evts[idx]; selIdx=idx;
+  if(!selectedEvt) return;
+  document.getElementById('step1').className='step done';
+  document.getElementById('step1').querySelector('.step-dot').textContent='v';
+  document.getElementById('stepLine').className='step-line done';
+  document.getElementById('step2').className='step active';
+  document.getElementById('headerTagline').textContent='Remplissez le formulaire';
+  var col=idx%4===0?'':'c'+(idx%4);
+  var datesHtml=(selectedEvt.dates||[]).map(function(d,i){
+    return '<label class="date-opt" id="dopt_'+i+'">'+
+      '<input type="radio" name="dateChoisie" value="'+d.id+'" onchange="selDate('+i+')" '+(i===0?'checked':'')+' required/>'+
+      '<div><div class="date-dl">'+fmtDate(d.date)+'</div>'+
+      '<div class="date-ds">'+d.heure+(d.capacite?' &middot; max '+d.capacite+' pers.':'')+'</div></div></label>';
+  }).join('');
+  document.getElementById('mainContent').innerHTML=
+    '<div class="card">'+
+    '<div class="form-header">'+
+    '<button class="back-btn" onclick="retourListe()">&#x2190; Changer evenement</button>'+
+    '<h2>Votre inscription</h2><p>Les champs <span style="color:#ec4899">*</span> sont obligatoires</p></div>'+
+    '<div class="evt-banner '+col+'">'+
+    '<div style="font-size:22px">'+ICONS[idx%4]+'</div>'+
+    '<div><div style="font-weight:800;color:#1e293b;font-size:14px">'+selectedEvt.nom+'</div>'+
+    '<div style="font-size:11px;color:#64748b">'+(selectedEvt.lieu||'')+'</div></div></div>'+
+    '<div class="form-body">'+
+    '<div class="err" id="errBanner"></div>'+
+    '<form id="regForm" onsubmit="submitForm(event)">'+
+    '<div class="grid2">'+
+    '<div class="field"><label>Prenom <span class="req">*</span></label><input type="text" id="fPrenom" placeholder="Marie" autocomplete="given-name" required/></div>'+
+    '<div class="field"><label>Nom <span class="req">*</span></label><input type="text" id="fNom" placeholder="Dupont" autocomplete="family-name" required/></div>'+
+    '</div>'+
+    '<div class="grid2">'+
+    '<div class="field"><label>Age <span class="req">*</span></label><input type="number" id="fAge" placeholder="28" min="18" max="80" required/></div>'+
+    '<div class="field"><label>Vous etes <span class="req">*</span></label>'+
+    '<select id="fSexe" required><option value="">-- Choisir --</option><option value="Femme">Femme</option><option value="Homme">Homme</option></select></div>'+
+    '</div>'+
+    '<div class="field"><label>Telephone / WhatsApp <span class="req">*</span></label><input type="tel" id="fTel" placeholder="+33 6 12 34 56 78" autocomplete="tel" required/></div>'+
+    '<div class="field"><label>Email</label><input type="email" id="fEmail" placeholder="marie@exemple.fr" autocomplete="email"/></div>'+
+    ((selectedEvt.dates||[]).length>0?'<div style="margin-bottom:14px"><span class="dlabel">Choisissez votre date <span class="req">*</span></span>'+datesHtml+'</div>':'')+
+    '<button type="submit" class="btn-submit" id="submitBtn">Je m inscris &#x2192;</button>'+
+    '</form></div></div>';
+  if((selectedEvt.dates||[]).length>0) selDate(0);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function retourListe(){
+  selectedEvt=null;
+  document.getElementById('step1').className='step active';
+  document.getElementById('step1').querySelector('.step-dot').textContent='1';
+  document.getElementById('stepLine').className='step-line';
+  document.getElementById('step2').className='step';
+  document.getElementById('headerTagline').textContent='Choisissez votre evenement';
+  renderEventList();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function selDate(idx){
+  document.querySelectorAll('.date-opt').forEach(function(el,i){ el.classList.toggle('sel',i===idx); });
+}
+
+function showErr(msg){
+  var el=document.getElementById('errBanner');
+  if(el){el.textContent=msg;el.style.display='block';el.scrollIntoView({behavior:'smooth',block:'nearest'});}
+}
+
+function submitForm(e){
+  e.preventDefault();
+  document.getElementById('errBanner').style.display='none';
+  var prenom=(document.getElementById('fPrenom').value||'').trim();
+  var nom=(document.getElementById('fNom').value||'').trim();
+  var age=parseInt(document.getElementById('fAge').value||'0');
+  var sexe=document.getElementById('fSexe').value;
+  var tel=(document.getElementById('fTel').value||'').trim();
+  var email=(document.getElementById('fEmail').value||'').trim();
+  var dr=document.querySelector('input[name="dateChoisie"]:checked');
+  var dateId=dr?dr.value:'';
+  if(!prenom||!nom){showErr('Prenom et nom obligatoires.');return;}
+  if(!age||age<18){showErr('Age invalide (18 ans minimum).');return;}
+  if(!sexe){showErr('Veuillez indiquer votre genre.');return;}
+  if(!tel){showErr('Numero de telephone obligatoire.');return;}
+  if((selectedEvt.dates||[]).length&&!dateId){showErr('Veuillez choisir une date.');return;}
+  var btn=document.getElementById('submitBtn');
+  btn.disabled=true; btn.textContent='Envoi en cours...';
+  var fields={
+    'Prenom':prenom,'Nom':nom,'Age':age,'Sexe':sexe,'Telephone':tel,
+    'Statut':'En attente','Evenement ID':selectedEvt.id||'','Evenement':selectedEvt.nom||''
+  };
+  if(email) fields['Email']=email;
+  if(dateId){
+    var dateObj=(selectedEvt.dates||[]).find(function(d){return d.id===dateId;});
+    fields['Date choisie ID']=dateId;
+    if(dateObj) fields['Date choisie']=dateObj.date+' '+dateObj.heure;
+  }
+  if(!cfg||!cfg.key){showErr('Configuration manquante : cle API Airtable absente. Contactez l organisateur.');btn.disabled=false;btn.textContent='Je m inscris';return;}
+  if(!cfg.base){showErr('Configuration manquante : Base ID Airtable absent. Contactez l organisateur.');btn.disabled=false;btn.textContent='Je m inscris';return;}
+  var url='https://api.airtable.com/v0/'+cfg.base+'/'+encodeURIComponent(cfg.table||'Inscriptions');
+  fetch(url,{method:'POST',headers:{'Authorization':'Bearer '+cfg.key,'Content-Type':'application/json'},body:JSON.stringify({fields:fields})})
+  .then(function(r){
+    if(!r.ok) return r.json().then(function(d){
+      var msg=(d.error&&d.error.message)||('Erreur '+r.status);
+      if(r.status===401||r.status===403) msg='Acces refuse (cle API invalide ou droits insuffisants). Contactez l organisateur.';
+      if(r.status===404) msg='Table Airtable introuvable (verifiez le nom de la table). Contactez l organisateur.';
+      throw new Error(msg);
+    });
+    return r.json();
+  })
+  .then(function(){showSuccess(prenom);})
+  .catch(function(err){btn.disabled=false;btn.textContent="Je m inscris";showErr('Erreur : '+err.message);});
+}
+
+function showSuccess(prenom){
+  document.getElementById('stepsBar').style.display='none';
+  document.getElementById('headerTagline').textContent='Inscription confirmee !';
+  document.getElementById('mainContent').innerHTML=
+    '<div class="card"><div class="success">'+
+    '<div class="icon">&#x1F389;</div><h2>C est enregistre !</h2>'+
+    '<p>Merci <strong>'+prenom+'</strong> pour ton inscription<br><strong>'+(selectedEvt?selectedEvt.nom:'cet evenement')+'</strong>.<br><br>'+
+    'L organisateur te contactera bientot pour confirmer ta place et et tous les details.</p>'+
+    '<div class="tag">&#x1F491; Blendora &mdash; Rencontres authentiques</div>'+
+    '</div></div>';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+cfg=loadConfig();
+if(!cfg||!cfg.key||!cfg.base||(!(cfg.events&&cfg.events.length)&&!cfg.event)){
+  document.getElementById('mainContent').innerHTML=
+    '<div class="card"><div class="noconf">'+
+    '<div style="font-size:48px;margin-bottom:12px">&#x1F517;</div>'+
+    '<div style="font-weight:700;color:#1e293b;font-size:15px;margin-bottom:6px">Lien invalide ou expire</div>'+
+    '<div style="font-size:13px;color:#94a3b8">Contactez l organisateur pour un nouveau lien.</div>'+
+    '</div></div>';
+}else{
+  renderEventList();
+}
+</script>
+</body>
+</html>
