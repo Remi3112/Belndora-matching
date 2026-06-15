@@ -1077,6 +1077,14 @@ function loadSettings() {
     if(h) historique = JSON.parse(h)||[];
     const pm = localStorage.getItem('blendora_paires_matchees');
     if(pm) settings.pairesDejaMatchees = JSON.parse(pm)||[];
+    // Migration : reset template si ancien format (sans resume_ia_block ou sans le nouveau footer)
+    if(settings.wa_notif_template && (
+      settings.wa_notif_template.indexOf('{{resume_ia_block}}') === -1 ||
+      settings.wa_notif_template.indexOf('4 €') === -1
+    )) {
+      settings.wa_notif_template = null;
+      saveSettings();
+    }
   } catch(e){}
 }
 
