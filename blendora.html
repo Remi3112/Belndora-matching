@@ -1444,7 +1444,7 @@ function openParticipant(id) {
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
         ${p.whatsapp?`<button onclick="envoyerProfilWA('${p.id}')" style="flex:1;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;border:none;border-radius:14px;padding:12px 16px;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">📲 Envoyer le profil par WA</button>`:''}
-        <button onclick="notifierMatchDepuisFiche('${p.id}')" style="flex:1;background:linear-gradient(135deg,#f43f5e,#ec4899);color:#fff;border:none;border-radius:14px;padding:12px 16px;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">💑 Notif match</button>
+        <button onclick="notifierMatchDepuisFiche('${p.id}',event)" style="flex:1;background:linear-gradient(135deg,#f43f5e,#ec4899);color:#fff;border:none;border-radius:14px;padding:12px 16px;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">💑 Notif match</button>
       </div>
       ${p.premium?`<button onclick="envoyerNotifPremiumWA('${p.id}')" style="width:100%;margin-top:8px;background:linear-gradient(135deg,#f59e0b,#7c3aed);color:#fff;border:none;border-radius:14px;padding:13px 16px;font-weight:800;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">⭐ Envoyer notification Premium WA</button>`:''}
     </div>`;
@@ -1473,17 +1473,28 @@ function envoyerProfilWA(id) {
 }
 
 // Notifier depuis la fiche : cherche le match accepté/envoyé de ce participant
-function notifierMatchDepuisFiche(id) {
+async function notifierMatchDepuisFiche(id, evt) {
   const p = participants.find(x=>x.id===id); if(!p) return;
-  // Cherche le match impliquant ce participant (statut Accepté ou Envoyé en priorité)
   const m = matchsData.find(x=>(x.h?.id===id||x.f?.id===id) && (x.statut==='Accepté'||x.statut==='Envoyé'))
          || matchsData.find(x=>(x.h?.id===id||x.f?.id===id));
   if(!m){toast('Aucun match trouvé pour '+p.prenom,'warn');return;}
-  // La personne avec qui elle est matchée
   const matchP = m.h?.id===id ? m.f : m.h;
   const waClean = normalisePhone(p.whatsapp);
   if(!waClean){toast('Pas de numéro WhatsApp pour '+p.prenom,'warn');return;}
-  const msg = buildMsgNotifWA(p, matchP, m.score);
+  // Loader sur le bouton
+  var btn = evt && evt.target ? evt.target.closest('button') : null;
+  var origHTML = btn ? btn.innerHTML : null;
+  if(btn){ btn.innerHTML = '⏳ ...'; btn.disabled = true; }
+  // Résumé IA si disponible
+  var summary = '';
+  if(settings.llm_key || settings.llm_provider) {
+    try {
+      var res = await genSummaryMatch(p, matchP, m.score);
+      if(res && res.length > 5) summary = res;
+    } catch(e) {}
+  }
+  var msg = buildMsgNotifWA(p, matchP, m.score, summary);
+  if(btn){ btn.innerHTML = origHTML; btn.disabled = false; }
   window.open('https://wa.me/'+waClean+'?text='+encodeURIComponent(msg),'_blank');
   closeModal('modalParticipant');
 }
@@ -3071,6 +3082,30 @@ async function genSummaryProfil(p) {
   }
 }
 
+// Résumé IA contextualisé au duo (match + compatibilité)
+async function genSummaryMatch(personne, matchPers, score) {
+  if(!settings.llm_key && !settings.llm_provider) return null;
+  var valsP = Array.isArray(personne.valeurs) ? personne.valeurs : (personne.valeurs||'').split(',').map(function(s){return s.trim();}).filter(Boolean);
+  var valsM = Array.isArray(matchPers.valeurs) ? matchPers.valeurs : (matchPers.valeurs||'').split(',').map(function(s){return s.trim();}).filter(Boolean);
+  var actsM = Array.isArray(matchPers.activites) ? matchPers.activites.join(', ') : (matchPers.activites||'');
+  var valsCommunes = valsP.filter(function(v){ return valsM.indexOf(v) !== -1; }).join(', ') || '—';
+  var sysPrompt = 'Tu es un assistant Blendora. A partir des profils ci-dessous, redige 2 phrases maximum en francais. '
+    + 'Decris brievement le profil du match (age, ville, profession, caracteristiques cles), puis mets en valeur un ou deux points forts de compatibilite avec le destinataire. '
+    + 'Sois factuel, concis, positif. Ne repete pas les noms des champs. Ne mets pas de titre.\n\n'
+    + 'Destinataire (' + (personne.prenom||'') + ') :\n'
+    + 'Age : ' + (personne.age||'') + ' | Valeurs : ' + valsP.join(', ') + ' | Rythme : ' + (personne.rythme||'') + ' | Langage amour : ' + (personne.langage||'') + '\n\n'
+    + 'Match (' + (matchPers.prenom||'') + ') :\n'
+    + 'Age : ' + (matchPers.age||'') + ' | Ville : ' + (matchPers.ville||'') + ' | Profession : ' + (matchPers.profession||'') + '\n'
+    + 'Valeurs : ' + valsM.join(', ') + ' | Activites : ' + actsM + '\n'
+    + 'Rythme : ' + (matchPers.rythme||'') + ' | Langage amour : ' + (matchPers.langage||'') + '\n'
+    + 'Valeurs communes : ' + valsCommunes + ' | Score : ' + (score||'') + '%\n\n'
+    + 'Portrait :';
+  try {
+    var result = await callLLM(sysPrompt);
+    return (result||'').trim();
+  } catch(e) { return null; }
+}
+
 async function envoyerFicheWAAvecResume(evt, matchId, who) {
   const m = matchsData.find(x=>x.id===matchId);
   if(!m) return;
@@ -3084,7 +3119,7 @@ async function envoyerFicheWAAvecResume(evt, matchId, who) {
   var summary = '';
   if(settings.llm_key || settings.llm_provider) {
     try {
-      var res = await genSummaryProfil(matchPers);
+      var res = await genSummaryMatch(personne, matchPers, m.score);
       if(res && res.length > 5) summary = res;
     } catch(e) {}
   }
@@ -3281,7 +3316,7 @@ Nous avons le plaisir de vous presenter votre match du mois Blendora.
 📧 Email : {{email_match}}
 Compatibilite : {{score}}%
 ━━━━━━━━━━━━━━━━━━━{{resume_ia_block}}
-Pour recevoir l'analyse complete de son langage de l'amour, sa phrase d'accroche personnalisee et le meilleur lieu de premier rendez-vous, un supplement de 9 € est disponible.
+Pour recevoir l'analyse complète du langage de l'amour, la phrase d'accroche personnalisée et le meilleur lieu de rendez-vous, un supplément de 4 € est demandé.
 Belle journee,
 Blendora`;
 
