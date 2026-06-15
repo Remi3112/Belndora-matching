@@ -3291,16 +3291,28 @@ Blendora Matching`;
 // Template de la NOTIFICATION de match (bouton "Notifier [prénom]" dans Messagerie)
 const WA_NOTIF_TEMPLATE_DEF = `Bonjour {{prenom}},
 
-Vous avez un nouveau match Blendora.
+Nous avons le plaisir de vous présenter votre match du mois Blendora.
 
-Votre match : {{prenom_match}} {{nom_match}}
-Ville : {{ville_match}}
-Age : {{age_match}} ans
-Compatibilite : {{score}}%
+━━━━━━━━━━━━━━━━━━━
+  Fiche profil Blendora
+━━━━━━━━━━━━━━━━━━━
+
+{{prenom_match}} {{nom_match}} — {{age_match}} ans
+📍 Ville : {{ville_match}}
+💼 Profession : {{profession_match}}
 
 {{bio_match}}
-Contact : {{whatsapp_match}}
 {{photo_match}}
+📱 WhatsApp : {{whatsapp_match}}
+📧 Email : {{email_match}}
+
+Compatibilite : {{score}}%
+
+━━━━━━━━━━━━━━━━━━━
+
+Pour recevoir l'analyse complete de son langage de l'amour, sa phrase d'accroche personnalisee et le meilleur lieu de premier rendez-vous, un supplement de 9 € est disponible.
+
+Belle journee,
 Blendora`;
 
 function saveEmailConfig() {
@@ -3568,22 +3580,26 @@ function viderMatchManuel() {
 function buildMsgNotifWA(personne, matchPers, score) {
   const {msgH, msgF} = genAccroche(matchPers.sexe==='Femme'?personne:matchPers, matchPers.sexe==='Femme'?matchPers:personne);
   const suggestion = personne.sexe==='Homme' ? msgH : msgF;
-  const waMatch = matchPers.whatsapp ? '+'+normalisePhone(matchPers.whatsapp) : '(pas de numéro)';
+  const waMatch = matchPers.whatsapp ? '+'+normalisePhone(matchPers.whatsapp) : '(pas de numero)';
   const photoLine = matchPers.photo ? 'Photo : '+matchPers.photo+'\n' : '';
-  const bioLine = matchPers.bio ? 'Bio :\n'+matchPers.bio+'\n' : '';
+  const bioLine = matchPers.bio ? 'Bio : '+matchPers.bio+'\n' : '';
+  const profLine = matchPers.profession || '—';
+  const emailLine = matchPers.email || '—';
   const template = settings.wa_notif_template || WA_NOTIF_TEMPLATE_DEF;
   return template
-    .replace(/\{\{prenom\}\}/g,          personne.prenom||'')
-    .replace(/\{\{nom\}\}/g,             personne.nom||'')
-    .replace(/\{\{prenom_match\}\}/g,    matchPers.prenom||'')
-    .replace(/\{\{nom_match\}\}/g,       matchPers.nom||'')
-    .replace(/\{\{score\}\}/g,           String(score||''))
-    .replace(/\{\{ville_match\}\}/g,     matchPers.ville||'—')
-    .replace(/\{\{age_match\}\}/g,       String(matchPers.age||'—'))
-    .replace(/\{\{message_accroche\}\}/g,suggestion||'')
-    .replace(/\{\{whatsapp_match\}\}/g,  waMatch)
-    .replace(/\{\{bio_match\}\}/g,       bioLine)
-    .replace(/\{\{photo_match\}\}/g,     photoLine);
+    .replace(/\{\{prenom\}\}/g,            personne.prenom||'')
+    .replace(/\{\{nom\}\}/g,               personne.nom||'')
+    .replace(/\{\{prenom_match\}\}/g,      matchPers.prenom||'')
+    .replace(/\{\{nom_match\}\}/g,         matchPers.nom||'')
+    .replace(/\{\{score\}\}/g,             String(score||''))
+    .replace(/\{\{ville_match\}\}/g,       matchPers.ville||'—')
+    .replace(/\{\{age_match\}\}/g,         String(matchPers.age||'—'))
+    .replace(/\{\{profession_match\}\}/g,  profLine)
+    .replace(/\{\{email_match\}\}/g,       emailLine)
+    .replace(/\{\{message_accroche\}\}/g,  suggestion||'')
+    .replace(/\{\{whatsapp_match\}\}/g,    waMatch)
+    .replace(/\{\{bio_match\}\}/g,         bioLine)
+    .replace(/\{\{photo_match\}\}/g,       photoLine);
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
