@@ -3270,29 +3270,18 @@ Blendora Matching`;
 
 // Template de la NOTIFICATION de match (bouton "Notifier [prénom]" dans Messagerie)
 const WA_NOTIF_TEMPLATE_DEF = `Bonjour {{prenom}},
-
 Nous avons le plaisir de vous presenter votre match du mois Blendora.
-
 ━━━━━━━━━━━━━━━━━━━
   Fiche profil Blendora
 ━━━━━━━━━━━━━━━━━━━
-
 {{prenom_match}} {{nom_match}} — {{age_match}} ans
-
 📍 Ville : {{ville_match}}
 💼 Profession : {{profession_match}}
-
 {{bio_match}}{{photo_match}}📱 WhatsApp : {{whatsapp_match}}
 📧 Email : {{email_match}}
-
 Compatibilite : {{score}}%
-
-━━━━━━━━━━━━━━━━━━━
-{{resume_ia_block}}
-━━━━━━━━━━━━━━━━━━━
-
+━━━━━━━━━━━━━━━━━━━{{resume_ia_block}}
 Pour recevoir l'analyse complete de son langage de l'amour, sa phrase d'accroche personnalisee et le meilleur lieu de premier rendez-vous, un supplement de 9 € est disponible.
-
 Belle journee,
 Blendora`;
 
@@ -3567,7 +3556,7 @@ function buildMsgNotifWA(personne, matchPers, score, resumeIA) {
   const profLine = matchPers.profession || '—';
   const emailLine = matchPers.email || '—';
   const resumeBlock = (resumeIA && resumeIA.length > 5)
-    ? '\n🧠 Résumé du profil :\n' + resumeIA + '\n'
+    ? '\n🧠 Résumé du profil :\n' + resumeIA + '\n━━━━━━━━━━━━━━━━━━━'
     : '';
   const template = settings.wa_notif_template || WA_NOTIF_TEMPLATE_DEF;
   return template
