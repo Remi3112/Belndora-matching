@@ -988,28 +988,9 @@ td{padding:10px 16px}
 // ══════════════════════════════════════════════════════════════════════════════
 // DONNÉES MOCK (utilisées si Airtable non connecté)
 // ══════════════════════════════════════════════════════════════════════════════
-const MOCK_H = [
-  {id:"H1",prenom:"Gérard",nom:"Garnier",age:48,ville:"Lyon",email:"gerard.g@mail.com",whatsapp:"+33612345678",profession:"Chef d'entreprise",valeurs:["Famille","Loyauté","Authenticité"],langage:"Actes de service",temperament:"Posé",role:"Protecteur",rythme:"Équilibré",activites:["Cuisine","Randonnée","Lecture"],projet:"Fonder une famille stable",bio:"Entrepreneur passionné, père de deux enfants, cherche une relation sérieuse.",sexe:"Homme",actif:true},
-  {id:"H2",prenom:"Nicolas",nom:"Antoine",age:35,ville:"Paris",email:"n.antoine@mail.com",whatsapp:"+33698765432",profession:"Ingénieur",valeurs:["Liberté","Curiosité","Bienveillance"],langage:"Mots d'affirmation",temperament:"Dynamique",role:"Complémentaire",rythme:"Actif",activites:["Sport","Voyages","Musique"],projet:"Voyager & s'épanouir",bio:"Ingénieur passionné de tech et de voyages, curieux de tout.",sexe:"Homme",actif:true},
-  {id:"H3",prenom:"Sergio",nom:"Da Silva",age:42,ville:"Marseille",email:"sergio.ds@mail.com",whatsapp:"+33655443322",profession:"Médecin",valeurs:["Famille","Santé","Générosité"],langage:"Toucher physique",temperament:"Chaleureux",role:"Protecteur",rythme:"Équilibré",activites:["Cuisine","Mer","Cinéma"],projet:"Fonder une famille stable",bio:"Médecin dévoué, amateur de bonne cuisine et de la mer.",sexe:"Homme",actif:true},
-  {id:"H4",prenom:"Thomas",nom:"Mercier",age:29,ville:"Bordeaux",email:"t.mercier@mail.com",whatsapp:"+33677889900",profession:"Graphiste",valeurs:["Créativité","Liberté","Authenticité"],langage:"Temps de qualité",temperament:"Créatif",role:"Complémentaire",rythme:"Flexible",activites:["Art","Photographie","Concerts"],projet:"Vivre de ma passion",bio:"Graphiste freelance, amoureux de l'art sous toutes ses formes.",sexe:"Homme",actif:true},
-  {id:"H5",prenom:"Antoine",nom:"Rousseau",age:38,ville:"Nantes",email:"a.rousseau@mail.com",whatsapp:"+33678901234",profession:"Coach sportif",valeurs:["Santé","Famille","Respect"],langage:"Toucher physique",temperament:"Dynamique",role:"Protecteur",rythme:"Actif",activites:["Sport","Nature","Cuisine"],projet:"Fonder une famille stable",bio:"Coach sportif passionné, nature et famille sont ses priorités absolues.",sexe:"Homme",actif:true},
-];
-const MOCK_F = [
-  {id:"F1",prenom:"Jocelyne",nom:"Rigaud",age:45,ville:"Lyon",email:"jocelyne.r@mail.com",whatsapp:"+33611223344",profession:"Infirmière",valeurs:["Famille","Loyauté","Authenticité"],langage:"Actes de service",temperament:"Posée",role:"Complémentaire",rythme:"Équilibré",activites:["Jardinage","Randonnée","Lecture"],projet:"Fonder une famille stable",bio:"Infirmière bienveillante, maman de 2 enfants, cherche un homme sincère.",sexe:"Femme",actif:true},
-  {id:"F2",prenom:"Nathalie",nom:"Ginisty",age:33,ville:"Paris",email:"n.ginisty@mail.com",whatsapp:"+33622334455",profession:"Architecte",valeurs:["Liberté","Curiosité","Créativité"],langage:"Mots d'affirmation",temperament:"Dynamique",role:"Complémentaire",rythme:"Actif",activites:["Architecture","Voyages","Yoga"],projet:"Voyager & s'épanouir",bio:"Architecte créative, amoureuse du design et des voyages.",sexe:"Femme",actif:true},
-  {id:"F3",prenom:"Natacha",nom:"Philippot",age:38,ville:"Marseille",email:"natacha.p@mail.com",whatsapp:"+33633445566",profession:"Kiné",valeurs:["Santé","Famille","Générosité"],langage:"Toucher physique",temperament:"Chaleureuse",role:"Soutien",rythme:"Équilibré",activites:["Sport","Mer","Cuisine"],projet:"Fonder une famille stable",bio:"Kiné sportive et épicurienne. Adore la mer et la bonne bouffe.",sexe:"Femme",actif:true},
-  {id:"F4",prenom:"Cyrielle",nom:"Geffroy",age:46,ville:"Lyon",email:"cyrielle.g@mail.com",whatsapp:"+33644556688",profession:"Dir. marketing",valeurs:["Authenticité","Loyauté","Famille"],langage:"Actes de service",temperament:"Posée",role:"Leader",rythme:"Équilibré",activites:["Yoga","Lecture","Cuisine"],projet:"Stabilité et sérénité",bio:"Directrice marketing, mère de famille, cherche un homme solide.",sexe:"Femme",actif:true},
-  {id:"F5",prenom:"Sophie",nom:"Laurent",age:27,ville:"Bordeaux",email:"sophie.l@mail.com",whatsapp:"+33655667788",profession:"Designer",valeurs:["Créativité","Liberté","Authenticité"],langage:"Temps de qualité",temperament:"Créative",role:"Complémentaire",rythme:"Flexible",activites:["Art","Musique","Photographie"],projet:"Vivre de ma passion",bio:"Designer freelance, artiste dans l'âme. Cherche un complice créatif.",sexe:"Femme",actif:true},
-];
-
-const MOCK_MATCHS = [
-  {id:"M1",h:MOCK_H[0],f:MOCK_F[0],score:94.5,ecart:3,rH:1,rF:1,statut:"Envoyé",raisons:"Valeurs identiques (Famille, Loyauté, Authenticité), même langage de l'amour, même projet de vie. Forte synergie émotionnelle.",detail:{valeurs:25,langage:20,temperament:13,projet:15,activites:8.5,rythme:9,stress:4}},
-  {id:"M2",h:MOCK_H[0],f:MOCK_F[3],score:90.0,ecart:2,rH:2,rF:1,statut:"En attente",raisons:"Valeurs très alignées, même rythme de vie équilibré, même approche amoureuse. Deux profils stables.",detail:{valeurs:25,langage:18,temperament:12,projet:15,activites:7,rythme:9,stress:4}},
-  {id:"M3",h:MOCK_H[1],f:MOCK_F[1],score:86.3,ecart:2,rH:1,rF:1,statut:"Accepté",raisons:"Même énergie dynamique, curiosité commune, goût des voyages. Langage de l'amour identique.",detail:{valeurs:18,langage:20,temperament:14,projet:15,activites:9,rythme:7,stress:3.3}},
-  {id:"M4",h:MOCK_H[2],f:MOCK_F[2],score:90.3,ecart:4,rH:1,rF:1,statut:"En attente",raisons:"Valeurs santé/famille alignées, même langage amoureux, même ville (Marseille), même projet de vie.",detail:{valeurs:22,langage:20,temperament:13,projet:15,activites:9,rythme:8,stress:3.3}},
-  {id:"M5",h:MOCK_H[3],f:MOCK_F[4],score:88.5,ecart:2,rH:1,rF:1,statut:"En attente",raisons:"Même univers créatif, valeurs identiques (Créativité, Liberté, Authenticité), même rythme flexible.",detail:{valeurs:25,langage:18,temperament:13,projet:12,activites:10,rythme:8,stress:2.5}},
-];
+const MOCK_H = [];
+const MOCK_F = [];
+const MOCK_MATCHS = [];
 
 const PROMPT_DEF = `Tu es un expert en compatibilité amoureuse pour Blendora.
 
@@ -3068,22 +3049,20 @@ async function genSummaryProfil(p) {
   if(!settings.llm_key && !settings.llm_provider) return null;
   var vals = Array.isArray(p.valeurs) ? p.valeurs.join(', ') : (p.valeurs||'');
   var acts = Array.isArray(p.activites) ? p.activites.join(', ') : (p.activites||'');
-  var sysPrompt = 'You are an expert profile summarizer specializing in creating concise, engaging, and informative overviews for dating and social matching platforms. Write in a friendly and accessible tone suitable for quick reading and first impressions.\n\n'
-    + 'Task description:\nAnalyze the provided personal information and synthesize a short, fluid summary that highlights the person\'s key characteristics, lifestyle, values, and what makes them unique. Focus on aspects that would help someone quickly understand the person\'s essence and compatibility potential. Avoid repeating field names and do not include any information that is missing or empty.\n\n'
-    + 'Output format:\nWrite a single, continuous paragraph in plain text. Do not include headings, bullet points, or any formatting other than standard punctuation. The summary should be between 3 and 6 sentences. If there is not enough information to generate a meaningful summary, output "Profil incomplet : informations insuffisantes."\n\n'
-    + 'Context and Data:\n'
-    + 'Prenom: ' + (p.prenom||'') + '\n'
-    + 'Nom: ' + (p.nom||'') + '\n'
-    + 'Sexe: ' + (p.sexe||'') + '\n'
-    + 'Age: ' + (p.age||'') + '\n'
-    + 'Ville: ' + (p.ville||'') + '\n'
-    + 'Situation familiale: ' + (p.situation||'') + '\n'
-    + 'Rythme de vie: ' + (p.rythme||'') + '\n'
-    + 'Activites: ' + acts + '\n'
-    + 'Valeurs top3: ' + vals + '\n'
-    + 'Role en relation: ' + (p.role||'') + '\n'
-    + 'Langage de l\'amour: ' + (p.langage||'') + '\n'
-    + 'Output:';
+    var sysPrompt = 'Tu es un assistant Blendora. A partir des informations ci-dessous, redige un court portrait factuel en 2 phrases maximum, en francais. Sois concis, neutre et informatif. Ne repete pas les noms des champs. Ne mets pas de titre. Si les informations sont insuffisantes, ecris : "Profil incomplet."\n\n'
+    + 'Profil :\n'
+    + 'Prenom : ' + (p.prenom||'') + '\n'
+    + 'Sexe : ' + (p.sexe||'') + '\n'
+    + 'Age : ' + (p.age||'') + '\n'
+    + 'Ville : ' + (p.ville||'') + '\n'
+    + 'Profession : ' + (p.profession||'') + '\n'
+    + 'Rythme de vie : ' + (p.rythme||'') + '\n'
+    + 'Activites : ' + acts + '\n'
+    + 'Valeurs : ' + vals + '\n'
+    + 'Role en relation : ' + (p.role||'') + '\n'
+    + 'Langage de l\'amour : ' + (p.langage||'') + '\n'
+    + 'Projet de vie : ' + (p.projet||'') + '\n'
+    + 'Portrait :';
   try {
     var result = await callLLM(sysPrompt);
     return (result||'').trim();
@@ -3102,13 +3081,14 @@ async function envoyerFicheWAAvecResume(evt, matchId, who) {
   var btn = evt && evt.target ? evt.target.closest('button') : null;
   var origHTML = btn ? btn.innerHTML : null;
   if(btn){ btn.innerHTML = '⏳ ...'; btn.disabled = true; }
-  var msg = buildMsgNotifWA(personne, matchPers, m.score);
+  var summary = '';
   if(settings.llm_key || settings.llm_provider) {
     try {
-      var summary = await genSummaryProfil(matchPers);
-      if(summary && summary.length > 10) msg += '\n\n---\nResume du profil :\n' + summary;
+      var res = await genSummaryProfil(matchPers);
+      if(res && res.length > 5) summary = res;
     } catch(e) {}
   }
+  var msg = buildMsgNotifWA(personne, matchPers, m.score, summary);
   if(btn){ btn.innerHTML = origHTML; btn.disabled = false; }
   window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank');
 }
@@ -3291,23 +3271,24 @@ Blendora Matching`;
 // Template de la NOTIFICATION de match (bouton "Notifier [prénom]" dans Messagerie)
 const WA_NOTIF_TEMPLATE_DEF = `Bonjour {{prenom}},
 
-Nous avons le plaisir de vous présenter votre match du mois Blendora.
+Nous avons le plaisir de vous presenter votre match du mois Blendora.
 
 ━━━━━━━━━━━━━━━━━━━
   Fiche profil Blendora
 ━━━━━━━━━━━━━━━━━━━
 
 {{prenom_match}} {{nom_match}} — {{age_match}} ans
+
 📍 Ville : {{ville_match}}
 💼 Profession : {{profession_match}}
 
-{{bio_match}}
-{{photo_match}}
-📱 WhatsApp : {{whatsapp_match}}
+{{bio_match}}{{photo_match}}📱 WhatsApp : {{whatsapp_match}}
 📧 Email : {{email_match}}
 
 Compatibilite : {{score}}%
 
+━━━━━━━━━━━━━━━━━━━
+{{resume_ia_block}}
 ━━━━━━━━━━━━━━━━━━━
 
 Pour recevoir l'analyse complete de son langage de l'amour, sa phrase d'accroche personnalisee et le meilleur lieu de premier rendez-vous, un supplement de 9 € est disponible.
@@ -3577,7 +3558,7 @@ function viderMatchManuel() {
   document.getElementById('manuelPersonneList').style.display='none';
 }
 
-function buildMsgNotifWA(personne, matchPers, score) {
+function buildMsgNotifWA(personne, matchPers, score, resumeIA) {
   const {msgH, msgF} = genAccroche(matchPers.sexe==='Femme'?personne:matchPers, matchPers.sexe==='Femme'?matchPers:personne);
   const suggestion = personne.sexe==='Homme' ? msgH : msgF;
   const waMatch = matchPers.whatsapp ? '+'+normalisePhone(matchPers.whatsapp) : '(pas de numero)';
@@ -3585,6 +3566,9 @@ function buildMsgNotifWA(personne, matchPers, score) {
   const bioLine = matchPers.bio ? 'Bio : '+matchPers.bio+'\n' : '';
   const profLine = matchPers.profession || '—';
   const emailLine = matchPers.email || '—';
+  const resumeBlock = (resumeIA && resumeIA.length > 5)
+    ? '\n🧠 Résumé du profil :\n' + resumeIA + '\n'
+    : '';
   const template = settings.wa_notif_template || WA_NOTIF_TEMPLATE_DEF;
   return template
     .replace(/\{\{prenom\}\}/g,            personne.prenom||'')
@@ -3599,7 +3583,8 @@ function buildMsgNotifWA(personne, matchPers, score) {
     .replace(/\{\{message_accroche\}\}/g,  suggestion||'')
     .replace(/\{\{whatsapp_match\}\}/g,    waMatch)
     .replace(/\{\{bio_match\}\}/g,         bioLine)
-    .replace(/\{\{photo_match\}\}/g,       photoLine);
+    .replace(/\{\{photo_match\}\}/g,       photoLine)
+    .replace(/\{\{resume_ia_block\}\}/g,   resumeBlock);
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -5920,6 +5905,29 @@ window.onload = function() {
   // Afficher la derniere sync si connue
   var lastSync = parseInt(localStorage.getItem('blendora_last_sync')||'0');
   if(lastSync) updateSyncLabel(lastSync);
+  // Purger les profils de test (H1-H5, F1-F5) du localStorage
+  (function purgeMockData() {
+    var MOCK_IDS = ['H1','H2','H3','H4','H5','F1','F2','F3','F4','F5'];
+    try {
+      var stored = JSON.parse(localStorage.getItem('blendora_inscriptions')||'[]');
+      var filtered = stored.filter(function(p){ return MOCK_IDS.indexOf(p.id) === -1; });
+      if(filtered.length !== stored.length) {
+        localStorage.setItem('blendora_inscriptions', JSON.stringify(filtered));
+        console.log('[Blendora] Profils de test supprimés du localStorage:', stored.length - filtered.length);
+      }
+    } catch(e) {}
+    try {
+      var storedP = JSON.parse(localStorage.getItem('blendora_premium')||'{}');
+      var changed = false;
+      MOCK_IDS.forEach(function(id){ if(storedP[id] !== undefined){ delete storedP[id]; changed = true; } });
+      if(changed) localStorage.setItem('blendora_premium', JSON.stringify(storedP));
+    } catch(e) {}
+    try {
+      var storedB = JSON.parse(localStorage.getItem('blendora_blocked')||'[]');
+      var filtB = storedB.filter(function(pair){ return MOCK_IDS.indexOf(pair[0]) === -1 && MOCK_IDS.indexOf(pair[1]) === -1; });
+      if(filtB.length !== storedB.length) localStorage.setItem('blendora_blocked', JSON.stringify(filtB));
+    } catch(e) {}
+  })();
   // Lancer l'auto-sync Airtable
   renderPondGauge();
   startAutoSync();
