@@ -189,7 +189,10 @@ td{padding:10px 16px}
       <h1 style="font-size:26px;font-weight:800;color:#1e293b">Participants</h1>
       <p style="color:#94a3b8;font-size:14px;margin-top:4px" id="partCount">Chargement…</p>
     </div>
-    <button onclick="loadParticipantsFromAirtable()" id="syncBtn" style="background:#fff;border:1.5px solid #f43f5e;color:#f43f5e;border-radius:14px;padding:9px 18px;font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px">🔄 Sync Airtable</button>
+    <div style="display:flex;flex-direction:column;gap:4px">
+      <button onclick="loadParticipantsFromAirtable()" id="syncBtn" style="background:#fff;border:1.5px solid #f43f5e;color:#f43f5e;border-radius:14px;padding:9px 18px;font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px">🔄 Sync Airtable</button>
+      <div id="syncLastInfo" style="font-size:10px;color:#94a3b8;text-align:center;display:none"></div>
+    </div>
   </div>
   <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">
     <div style="flex:1;min-width:220px;display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:8px 14px">
@@ -201,6 +204,7 @@ td{padding:10px 16px}
       <button class="pill" onclick="setFiltre('Homme',this)">Hommes</button>
       <button class="pill" onclick="setFiltre('Femme',this)">Femmes</button>
       <button class="pill" onclick="setFiltre('Premium',this)">⭐ Premium</button>
+      <button class="pill" onclick="setFiltre('Bloque',this)" id="pilBloque">🚫 Bloqués</button>
     </div>
   </div>
   <!-- Filtres tranches d'âge -->
@@ -1336,7 +1340,8 @@ function filterParticipants() {
   const q = (document.getElementById('searchInput').value||'').toLowerCase();
   const list = participants.filter(p=>{
     const ok1 = (p.prenom+' '+p.nom+' '+p.ville+' '+(p.profession||'')).toLowerCase().includes(q);
-    const ok2 = filtreParticipants==='Tous'||p.sexe===filtreParticipants||(filtreParticipants==='Premium'&&p.premium);
+    const ok2 = filtreParticipants==='Tous'||p.sexe===filtreParticipants||(filtreParticipants==='Premium'&&p.premium)||(filtreParticipants==='Bloque'&&p.blocked);
+    if(filtreParticipants!=='Bloque' && p.blocked) return false;
     const age = +p.age||0;
     let ok3 = true;
     if(filtreAge==='20-30')     ok3 = age>=20 && age<=30;
@@ -1368,6 +1373,7 @@ function filterParticipants() {
       <td>${waLink(p.whatsapp, p.whatsapp)}</td>
       <td><span style="font-size:16px">${p.actif?'✅':'⬜'}</span></td>
       <td><button onclick="togglePremium(event,'${p.id}')" style="background:${p.premium?'#fef9c3':'#f1f5f9'};border:1px solid ${p.premium?'#fbbf24':'#e2e8f0'};border-radius:10px;padding:5px 12px;color:${p.premium?'#b45309':'#94a3b8'};font-weight:700;font-size:12px">${p.premium?'⭐ Actif':'⭐ Non'}</button></td>
+      <td><button onclick="toggleBlocked(event,'${p.id}')" style="background:${p.blocked?'#fee2e2':'#f1f5f9'};border:1px solid ${p.blocked?'#fca5a5':'#e2e8f0'};border-radius:10px;padding:5px 12px;color:${p.blocked?'#dc2626':'#94a3b8'};font-weight:700;font-size:12px">${p.blocked?'🚫 Bloqué':'🚫 Non'}</button></td>
       <td><button style="background:#fdf2f8;border:none;border-radius:10px;padding:5px 12px;color:#f43f5e;font-weight:600;font-size:12px">Voir →</button></td>
     </tr>`).join('') : `<tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:30px;font-size:13px">Aucun participant trouvé</td></tr>`;
 }
@@ -1429,6 +1435,14 @@ function openParticipant(id) {
           <div style="font-size:11px;color:#94a3b8;margin-top:2px">${p.premium?'Notification enrichie activée':'Notif standard — activer pour infos supplémentaires'}</div>
         </div>
         <button onclick="togglePremiumModal('${p.id}')" style="background:${p.premium?'linear-gradient(135deg,#f59e0b,#d97706)':'#e2e8f0'};color:${p.premium?'#fff':'#64748b'};border:none;border-radius:12px;padding:8px 18px;font-weight:700;font-size:13px;cursor:pointer;flex-shrink:0">${p.premium?'✅ Actif — Désactiver':'Activer'}</button>
+      </div>
+      <!-- Toggle bloqué dans la modale -->
+      <div style="margin-top:10px;background:${p.blocked?'#fef2f2':'#f8fafc'};border:1.5px solid ${p.blocked?'#fca5a5':'#e2e8f0'};border-radius:16px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <div>
+          <div style="font-weight:700;font-size:13px;color:${p.blocked?'#dc2626':'#64748b'}">🚫 Bloquer du matching</div>
+          <div style="font-size:11px;color:#94a3b8;margin-top:2px">${p.blocked?'Exclu de tous les matchings':'Inclus dans le matching — cliquer pour bloquer'}</div>
+        </div>
+        <button onclick="toggleBlockedModal('${p.id}')" style="background:${p.blocked?'linear-gradient(135deg,#ef4444,#dc2626)':'#e2e8f0'};color:${p.blocked?'#fff':'#64748b'};border:none;border-radius:12px;padding:8px 18px;font-weight:700;font-size:13px;cursor:pointer;flex-shrink:0">${p.blocked?'Debloquer':'Bloquer'}</button>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
         ${p.whatsapp?`<button onclick="envoyerProfilWA('${p.id}')" style="flex:1;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;border:none;border-radius:14px;padding:12px 16px;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">📲 Envoyer le profil par WA</button>`:''}
@@ -1786,10 +1800,13 @@ async function loadParticipantsFromAirtable() {
         else       { merged.push(p); added++; }
       }
       participants = merged;
-      loadPremiumFlags();
+      loadPremiumFlags(); loadBlockedFlags();
       filterParticipants(); renderDashboard();
       const H=participants.filter(p=>p.sexe==='Homme').length;
       const F=participants.filter(p=>p.sexe==='Femme').length;
+      const now = Date.now();
+      localStorage.setItem('blendora_last_sync', now);
+      updateSyncLabel(now);
       toast(`✅ Sync : ${updated} mis à jour · ${added} ajoutés (total ${participants.length} — ${H}H/${F}F)`);
       if(skipped.length>0) toast(`⚠️ ${skipped.length} profils ignorés (voir console)`, 'warn');
     } else {
@@ -1805,6 +1822,77 @@ async function loadParticipantsFromAirtable() {
   } finally {
     if(btn){ btn.innerHTML='🔄 Sync Airtable'; btn.disabled=false; }
   }
+}
+
+// ── AUTO-SYNC AIRTABLE ────────────────────────────────────────────────────
+function updateSyncLabel(ts) {
+  var el = document.getElementById('syncLastInfo');
+  if(!el) return;
+  if(!ts) { el.style.display='none'; return; }
+  var diff = Date.now() - ts;
+  var mins = Math.floor(diff/60000);
+  var hrs  = Math.floor(diff/3600000);
+  var days = Math.floor(diff/86400000);
+  var label = days>0 ? 'il y a '+days+' jour'+(days>1?'s':'')
+             : hrs>0  ? 'il y a '+hrs+'h'
+             : mins>0 ? 'il y a '+mins+' min'
+             : "a l instant";
+  el.textContent = 'Derniere sync : '+label;
+  el.style.display = 'block';
+}
+
+async function autoSyncAirtable(silent) {
+  if(!settings.at_key || !settings.at_base) return; // Pas configure
+  var lastSync = parseInt(localStorage.getItem('blendora_last_sync')||'0');
+  var elapsed  = Date.now() - lastSync;
+  var INTERVAL = 24 * 3600 * 1000; // 24h
+  if(lastSync && elapsed < INTERVAL && !silent) return; // Deja sync recemment
+  try {
+    var btn = document.getElementById('syncBtn');
+    if(btn && !btn.disabled) { btn.innerHTML='<span class="spin">⟳</span> Auto-sync…'; btn.disabled=true; }
+    var {parsed, skipped} = await fetchAndParseParticipants();
+    if(parsed.length > 0) {
+      var merged = [...participants];
+      var added=0, updated=0;
+      for(var p of parsed){
+        var idx = merged.findIndex(function(e){return e.id===p.id;});
+        if(idx>=0){ merged[idx]={...merged[idx],...p}; updated++; }
+        else      { merged.push(p); added++; }
+      }
+      participants = merged;
+      loadPremiumFlags(); loadBlockedFlags();
+      filterParticipants(); renderDashboard();
+      var now = Date.now();
+      localStorage.setItem('blendora_last_sync', now);
+      updateSyncLabel(now);
+      if(!silent || added>0) toast('Auto-sync : '+updated+' mis a jour · '+added+' ajoutés');
+    }
+  } catch(e) {
+    // Silencieux en auto — ne pas bloquer l'interface
+    console.warn('[Blendora] Auto-sync error:', e.message);
+  } finally {
+    var btn2 = document.getElementById('syncBtn');
+    if(btn2){ btn2.innerHTML='🔄 Sync Airtable'; btn2.disabled=false; }
+  }
+}
+
+function startAutoSync() {
+  // Sync au chargement (apres 1s pour laisser l'UI s'initialiser)
+  setTimeout(function(){ autoSyncAirtable(true); }, 1000);
+  // Verifier toutes les heures si une sync est necessaire (>24h)
+  setInterval(function(){
+    var lastSync = parseInt(localStorage.getItem('blendora_last_sync')||'0');
+    var elapsed  = Date.now() - lastSync;
+    if(elapsed >= 24 * 3600 * 1000) {
+      autoSyncAirtable(true);
+    }
+    updateSyncLabel(lastSync);
+  }, 3600000); // toutes les heures
+  // Mettre a jour l'affichage "derniere sync" toutes les minutes
+  setInterval(function(){
+    var lastSync = parseInt(localStorage.getItem('blendora_last_sync')||'0');
+    if(lastSync) updateSyncLabel(lastSync);
+  }, 60000);
 }
 
 function showCorsModal() {
@@ -2139,8 +2227,8 @@ async function genererAvecIA() {
   zone.innerHTML=`<div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:14px;padding:14px;color:#94a3b8;font-size:13px;display:flex;align-items:center;gap:8px"><span class="spin">⟳</span> L'IA analyse votre contexte…</div>`;
 
   try {
-    const H = participants.filter(p=>p.sexe==='Homme'&&p.actif!==false&&!p.doublon);
-    const F = participants.filter(p=>p.sexe==='Femme' &&p.actif!==false&&!p.doublon);
+    const H = participants.filter(p=>p.sexe==='Homme'&&p.actif!==false&&!p.doublon&&!p.blocked);
+    const F = participants.filter(p=>p.sexe==='Femme' &&p.actif!==false&&!p.doublon&&!p.blocked);
     const ecart    = document.getElementById('ecartRange').value;
     const scoreMin = document.getElementById('scoreRange').value;
     const maxM     = document.getElementById('maxRange').value;
@@ -5645,6 +5733,7 @@ window.onload = function() {
   updateTotal();
   filterParticipants();
   loadPremiumFlags();
+  loadBlockedFlags();
   renderMatchs();
   renderDashboard();
   updateInscriptionBadge();
@@ -5663,6 +5752,11 @@ window.onload = function() {
   if(settings.score_min){ document.getElementById('cScoreRange').value=settings.score_min; document.getElementById('cScoreVal').textContent=settings.score_min+'%'; document.getElementById('scoreRange').value=settings.score_min; document.getElementById('scoreVal').textContent=settings.score_min+'%'; }
   if(settings.max_matchs){ document.getElementById('cMaxRange').value=settings.max_matchs; document.getElementById('cMaxVal').textContent=settings.max_matchs; document.getElementById('maxRange').value=settings.max_matchs; document.getElementById('maxVal').textContent=settings.max_matchs; }
   updateParamsPreview();
+  // Afficher la derniere sync si connue
+  var lastSync = parseInt(localStorage.getItem('blendora_last_sync')||'0');
+  if(lastSync) updateSyncLabel(lastSync);
+  // Lancer l'auto-sync Airtable
+  startAutoSync();
 };
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -5688,6 +5782,38 @@ function togglePremiumModal(id) {
   toast(p.premium ? '⭐ ' + (p.prenom||'') + ' passe en Premium !' : (p.prenom||'') + ' retiré du Premium');
   // Rafraîchir la modale
   openParticipant(id);
+}
+
+// ── BLOCKED FLAGS ──────────────────────────────────────────────────────────
+function toggleBlocked(evt, id) {
+  if(evt) evt.stopPropagation();
+  const p = participants.find(x=>x.id===id); if(!p) return;
+  p.blocked = !p.blocked;
+  saveBlockedFlags();
+  filterParticipants();
+  toast(p.blocked ? '🚫 ' + (p.prenom||'') + ' bloque du matching' : (p.prenom||'') + ' debloque');
+}
+
+function toggleBlockedModal(id) {
+  const p = participants.find(x=>x.id===id); if(!p) return;
+  p.blocked = !p.blocked;
+  saveBlockedFlags();
+  filterParticipants();
+  toast(p.blocked ? '🚫 ' + (p.prenom||'') + ' bloque du matching' : (p.prenom||'') + ' debloque');
+  openParticipant(id);
+}
+
+function saveBlockedFlags() {
+  var flags = {};
+  participants.forEach(function(p){ if(p.blocked) flags[p.id] = true; });
+  try { localStorage.setItem('blendora_blocked', JSON.stringify(flags)); } catch(e) {}
+}
+
+function loadBlockedFlags() {
+  try {
+    var flags = JSON.parse(localStorage.getItem('blendora_blocked') || '{}');
+    participants.forEach(function(p){ if(flags[p.id]) p.blocked = true; });
+  } catch(e) {}
 }
 
 // Persister les flags premium séparément (les participants viennent d'Airtable)
@@ -6321,8 +6447,8 @@ function copierLienInscription(idx) {
   var cfg = {key:settings.at_key||'',base:settings.at_base||'',table:settings.at_table_inscriptions||'Inscriptions',event:{id:evt.id,nom:evt.nom,lieu:evt.lieu||'',description:evt.description||'',dates:evt.dates}};
   var encoded = '';
   try{encoded=btoa(unescape(encodeURIComponent(JSON.stringify(cfg))));}catch(e){encoded='';}
-  var base = location.href.replace(/[?#].*$/,'');
-  var regUrl = base.replace('blendora.html','blendora-register.html')+'#cfg='+encoded;
+  var base = location.href.replace(/[?#].*$/,'').replace(/\/[^\/]*$/,'/');
+  var regUrl = base+'blendora-register.html#cfg='+encoded;
   if(navigator.clipboard){
     navigator.clipboard.writeText(regUrl).then(function(){toast('Lien copie dans le presse-papiers !');}).catch(function(){prompt('Copiez ce lien :',regUrl);});
   } else { prompt('Copiez ce lien :',regUrl); }
@@ -6339,8 +6465,8 @@ function copierLienUnique() {
   };
   var encoded='';
   try{encoded=btoa(unescape(encodeURIComponent(JSON.stringify(cfg))));}catch(e){encoded='';}
-  var base = location.href.replace(/[?#].*$/,'');
-  var regUrl = base.replace('blendora.html','blendora-register.html')+'#cfg='+encoded;
+  var base = location.href.replace(/[?#].*$/,'').replace(/\/[^\/]*$/,'/');
+  var regUrl = base+'blendora-register.html#cfg='+encoded;
   if(navigator.clipboard){
     navigator.clipboard.writeText(regUrl).then(function(){
       toast('Lien unique copie ! ('+eventsData.length+' evenement'+(eventsData.length>1?'s':'')+')');
@@ -6641,28 +6767,43 @@ function constituerGroupesDepuisEvent(eventId) {
   var noteReduite = (tailleEffective < targetTaille) ? ' (taille adaptee : '+tailleEffective+' pers./groupe, '+totalParts+' inscrits)' : ' ('+totalParts+' participants)';
   toast(created+' groupe(s) cree(s) pour "'+((evt&&evt.nom)||'cet evenement')+'"'+noteReduite, 'ok');
 
-  // Bannière de confirmation sur page Groupes
-  var bannerMsg = created+' groupe'+(created>1?'s':'')+' cree'+(created>1?'s':'')+' pour "'+((evt&&evt.nom)||'cet evenement')+'" — '+totalParts+' participants repartis';
-  if(tailleEffective < targetTaille) bannerMsg += ' (groupes de '+tailleEffective+' au lieu de '+targetTaille+')';
-  sessionStorage.setItem('blendora_groupe_banner', bannerMsg);
+  // Notification de confirmation dans la section Evenements
+  var evtNom = (evt && evt.nom) || 'cet evenement';
+  var notifMsg = created+' groupe'+(created>1?'s':'')+' cree'+(created>1?'s':'')+' pour "'+evtNom+'" — '+totalParts+' participants repartis';
+  if(tailleEffective < targetTaille) notifMsg += ' (groupes de '+tailleEffective+' au lieu de '+targetTaille+')';
 
+  // Supprimer ancienne notif si existe
+  var oldNotif = document.getElementById('groupesIANotif');
+  if(oldNotif) oldNotif.remove();
+
+  // Creer la notification persistante dans la page evenements
+  var notifEl = document.createElement('div');
+  notifEl.id = 'groupesIANotif';
+  notifEl.style.cssText = 'background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:2px solid #22c55e;border-radius:16px;padding:16px 20px;margin-top:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;animation:fadeIn .3s ease';
+  notifEl.innerHTML = '<div style="display:flex;align-items:center;gap:10px;flex:1">'
+    + '<div style="width:36px;height:36px;border-radius:50%;background:#22c55e;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">✓</div>'
+    + '<div><div style="font-weight:800;font-size:14px;color:#15803d">Groupes crees avec succes</div>'
+    + '<div style="font-size:12px;color:#16a34a;margin-top:2px">'+notifMsg+'</div></div></div>'
+    + '<div style="display:flex;gap:8px;flex-shrink:0">'
+    + '<button onclick="goTo(&quot;groupes&quot;);document.getElementById(&quot;groupesIANotif&quot;)&&document.getElementById(&quot;groupesIANotif&quot;).remove();" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border:none;border-radius:10px;padding:8px 16px;font-weight:700;font-size:12px;cursor:pointer">Voir les groupes</button>'
+    + '<button onclick="document.getElementById(&quot;groupesIANotif&quot;)&&document.getElementById(&quot;groupesIANotif&quot;).remove();" style="background:#e2e8f0;color:#64748b;border:none;border-radius:10px;padding:8px 12px;font-weight:700;font-size:12px;cursor:pointer">x</button>'
+    + '</div>';
+
+  // Inserer apres la liste des evenements
+  var evtPanel = document.getElementById('evtPanel_events');
+  if(evtPanel) {
+    evtPanel.appendChild(notifEl);
+    notifEl.scrollIntoView({behavior:'smooth', block:'nearest'});
+  } else {
+    // Fallback : toast
+    toast(notifMsg);
+  }
+
+  // Aussi preparer la page Groupes pour quand l'utilisateur y va
   var sel = document.getElementById('groupeEventSelect');
   if(sel) sel.value = eventId;
   filtrerParEvent(eventId);
-  goTo('groupes');
-  setTimeout(function(){
-    renderSavedGroupes();
-    // Afficher la bannière
-    var msg = sessionStorage.getItem('blendora_groupe_banner');
-    if(msg){
-      sessionStorage.removeItem('blendora_groupe_banner');
-      var banner = document.createElement('div');
-      banner.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;padding:14px 28px;border-radius:16px;font-weight:700;font-size:14px;z-index:500;box-shadow:0 8px 32px rgba(124,58,237,.4);text-align:center;max-width:90vw';
-      banner.textContent = msg;
-      document.body.appendChild(banner);
-      setTimeout(function(){banner.style.transition='opacity .5s';banner.style.opacity='0';setTimeout(function(){banner.remove();},500);},3500);
-    }
-  },150);
+  renderSavedGroupes();
 }
 
 function suggestionIAGroupes() {
