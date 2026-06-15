@@ -1454,7 +1454,7 @@ function openParticipant(id) {
         ${p.whatsapp?`<button onclick="envoyerProfilWA('${p.id}')" style="flex:1;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;border:none;border-radius:14px;padding:12px 16px;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">📲 Envoyer le profil par WA</button>`:''}
         <button onclick="notifierMatchDepuisFiche('${p.id}',event)" style="flex:1;background:linear-gradient(135deg,#f43f5e,#ec4899);color:#fff;border:none;border-radius:14px;padding:12px 16px;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">💑 Notif match</button>
       </div>
-      ${p.premium?`<button onclick="envoyerNotifPremiumWA('${p.id}')" style="width:100%;margin-top:8px;background:linear-gradient(135deg,#f59e0b,#7c3aed);color:#fff;border:none;border-radius:14px;padding:13px 16px;font-weight:800;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">⭐ Envoyer notification Premium WA</button>`:''}
+      ${p.premium?`<button onclick="envoyerNotifPremiumWA('${p.id}',event)" style="width:100%;margin-top:8px;background:linear-gradient(135deg,#f59e0b,#7c3aed);color:#fff;border:none;border-radius:14px;padding:13px 16px;font-weight:800;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">⭐ Envoyer notification Premium WA</button>`:''}
     </div>`;
   document.getElementById('modalParticipant').classList.add('show');
 }
@@ -6037,51 +6037,58 @@ function loadPremiumFlags() {
 }
 
 // Message premium enrichi : langage amour match + accroche + activité suggérée
-function buildMsgNotifWAPremium(personne, matchPers, score) {
-  // Base = notif standard
-  var base = buildMsgNotifWA(personne, matchPers, score);
+// Message Premium autonome — analyse complète du match
+function buildMsgNotifWAPremium(personne, matchPers, score, resumeIA) {
+  var actsP = Array.isArray(personne.activites) ? personne.activites : [];
+  var actsM = Array.isArray(matchPers.activites) ? matchPers.activites : [];
+  var valsP = Array.isArray(personne.valeurs) ? personne.valeurs : [];
+  var valsM = Array.isArray(matchPers.valeurs) ? matchPers.valeurs : [];
+  var commonActs = actsP.filter(function(a){ return actsM.indexOf(a) !== -1; });
+  var commonVals = valsP.filter(function(v){ return valsM.indexOf(v) !== -1; });
 
   // Langage d'amour du match
-  var langageMatch = matchPers.langage || '';
+  var langageMatch = matchPers.langage || '—';
 
-  // Accroche personnalisée
-  var commonActs = (personne.activites||[]).filter(function(a){ return (matchPers.activites||[]).includes(a); });
-  var commonVals = (personne.valeurs||[]).filter(function(v){ return (matchPers.valeurs||[]).includes(v); });
+  // Phrase d'accroche personnalisée basée sur les activités/valeurs communes
   var accroche = personne.accroche_at || '';
   if(!accroche) {
     if(commonActs.length) {
       accroche = 'Bonjour ' + matchPers.prenom + ', j\'adore aussi ' + commonActs[0] + '. On pourrait en parler autour d\'un rendez-vous ?';
     } else if(commonVals.length) {
-      accroche = 'Bonjour ' + matchPers.prenom + ', on partage les memes valeurs (' + commonVals[0] + '). J\'aimerais en savoir plus sur toi.';
+      accroche = 'Bonjour ' + matchPers.prenom + ', on partage les mêmes valeurs (' + commonVals[0] + '). J\'aimerais en savoir plus sur toi.';
     } else {
-      accroche = 'Bonjour ' + matchPers.prenom + ', j\'ai hate de mieux te connaitre.';
+      accroche = 'Bonjour ' + matchPers.prenom + ', j\'ai hâte de mieux te connaître.';
     }
   }
 
-  // Suggestion de 1er rendez-vous
+  // Idée de premier rendez-vous basée sur les activités communes
   var activite = matchPers.activite_suggest || personne.activite_suggest || '';
   if(!activite && commonActs.length) activite = 'Autour de ' + commonActs[0];
+  if(!activite && commonVals.length) activite = 'Un lieu en lien avec votre goût commun pour : ' + commonVals[0];
   if(!activite) activite = 'Un café ou une balade (à vous de décider !)';
 
-  var premiumLines = [
-    '',
-    '--- Infos complementaires ---',
-    ''
-  ];
-  if(langageMatch) {
-    premiumLines.push('Langage d\'amour de ' + matchPers.prenom + ' : ' + langageMatch);
-    premiumLines.push('');
-  }
-  premiumLines.push('Message suggere a envoyer :');
-  premiumLines.push(accroche);
-  premiumLines.push('');
-  premiumLines.push('Idee de premier rendez-vous : ' + activite);
+  // Résumé IA si disponible
+  var resumeBlock = (resumeIA && resumeIA.length > 5)
+    ? '\n🧠 Analyse IA :\n' + resumeIA + '\n━━━━━━━━━━━━━━━━━━━'
+    : '';
 
-  return base + premiumLines.join('\n');
+  return '⭐ Premium Blendora\n'
+    + '━━━━━━━━━━━━━━━━━━━\n'
+    + 'Bonjour ' + (personne.prenom||'') + ',\n'
+    + 'Voici votre analyse complète pour votre match avec ' + (matchPers.prenom||'') + ' (' + score + '%).\n'
+    + '━━━━━━━━━━━━━━━━━━━\n'
+    + '--- Infos complémentaires ---\n'
+    + '━━━━━━━━━━━━━━━━━━━\n\n'
+    + '💝 Langage d\'amour de ' + (matchPers.prenom||'') + ' : ' + langageMatch + '\n\n'
+    + '💬 Message suggéré à envoyer :\n' + accroche + '\n\n'
+    + '📍 Idée de premier rendez-vous :\n' + activite + '\n'
+    + '━━━━━━━━━━━━━━━━━━━'
+    + resumeBlock + '\n'
+    + 'Belle journée,\nBlendora';
 }
 
-// Envoyer la notification premium depuis la fiche participant
-function envoyerNotifPremiumWA(id) {
+// Envoyer la notification premium depuis la fiche participant (async + résumé IA)
+async function envoyerNotifPremiumWA(id, evt) {
   var p = participants.find(function(x){ return x.id===id; });
   if(!p){ toast('Participant introuvable','warn'); return; }
   var m = matchsData.find(function(x){ return (x.h&&x.h.id===id||x.f&&x.f.id===id) && (x.statut==='Accepté'||x.statut==='Envoyé'); })
@@ -6091,7 +6098,20 @@ function envoyerNotifPremiumWA(id) {
   if(!matchP){ toast('Profil du match introuvable','warn'); return; }
   var waClean = normalisePhone(p.whatsapp);
   if(!waClean){ toast('Pas de numéro WhatsApp pour ' + p.prenom,'warn'); return; }
-  var msg = buildMsgNotifWAPremium(p, matchP, m.score);
+  // Loader sur le bouton
+  var btn = evt && evt.target ? evt.target.closest('button') : null;
+  var origHTML = btn ? btn.innerHTML : null;
+  if(btn){ btn.innerHTML = '⏳ ...'; btn.disabled = true; }
+  // Résumé IA contextualisé au duo
+  var summary = '';
+  if(settings.llm_key || settings.llm_provider) {
+    try {
+      var res = await genSummaryMatch(p, matchP, m.score);
+      if(res && res.length > 5) summary = res;
+    } catch(e) {}
+  }
+  var msg = buildMsgNotifWAPremium(p, matchP, m.score, summary);
+  if(btn){ btn.innerHTML = origHTML; btn.disabled = false; }
   window.open('https://wa.me/' + waClean + '?text=' + encodeURIComponent(msg), '_blank');
   closeModal('modalParticipant');
   toast('⭐ Notification Premium envoyée à ' + p.prenom);
