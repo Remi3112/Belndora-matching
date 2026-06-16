@@ -568,6 +568,13 @@ td{padding:10px 16px}
       <button onclick="saveLLM()" style="background:linear-gradient(135deg,#f43f5e,#ec4899);color:#fff;border:none;border-radius:12px;padding:9px 20px;font-weight:700;font-size:13px">💾 Enregistrer</button>
     </div>
     <div id="llmTestResult" style="display:none;margin-top:12px;padding:10px 14px;border-radius:12px;font-size:13px;font-weight:500"></div>
+    <div style="margin-top:16px">
+      <div class="field" style="margin-bottom:0">
+        <label style="font-weight:700;color:#1e293b;font-size:13px">🧠 System prompt IA</label>
+        <textarea id="iaSystemPrompt" rows="4" placeholder="Ex : Tu es un conseiller en rencontres bienveillant, chaleureux et optimiste. Tu personnalises chaque message selon la personnalité des profils et tu évites les formules génériques." oninput="markDirty('llm')" style="width:100%;box-sizing:border-box;resize:vertical;font-family:inherit;font-size:13px;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:12px;background:#f8fafc;color:#1e293b;line-height:1.5;margin-top:6px"></textarea>
+        <div style="font-size:11px;color:#94a3b8;margin-top:5px">Appliqué au ton/style de l'IA pour : résumé du match, phrase d'accroche et suggestion de RDV (option Premium). Laissez vide pour utiliser le comportement par défaut.</div>
+      </div>
+    </div>
   </div>
 
   <!-- Section WhatsApp -->
@@ -1049,8 +1056,9 @@ let pond = {valeurs:25,langage_amour:20,temperament_role:15,projet_vie:15,activi
 // Settings (persistées en localStorage)
 let settings = {
   at_key:'', at_base:'appoDLFJ6rUalU4o9', at_table_part:'tbllC3RTuyTJhIW2q', at_table_compat:'tbl1SWrTXa0gplA9N', at_table_inscriptions:'Inscriptions',
-  llm_provider:'anthropic', llm_model:'claude-sonnet-4-6', llm_key:'', llm_endpoint:'',
+  llm_provider:'anthropic', llm_model:'claude-sonnet-4-6', llm_key:'', llm_endpoint:'', ia_system_prompt:'',
   ecart_age:15, score_min:60, max_matchs:3, prompt:PROMPT_DEF,
+  last_matching_month:'', rotation_mois:6,
   pond:{...pond},
   blacklist:[], // [{h_id, f_id, h_prenom, f_prenom, date}]
   pairesDejaMatchees:[], // [{h_id, f_id, h_prenom, f_prenom, date, score}] — matchs acceptés/envoyés
@@ -1105,6 +1113,7 @@ function applySettingsToUI() {
   v('llmModel', settings.llm_model||'');
   v('llmApiKey', settings.llm_key||'');
   v('llmEndpoint', settings.llm_endpoint||'');
+  v('iaSystemPrompt', settings.ia_system_prompt||'');
   // Matching
   if(settings.prompt) v('promptText', settings.prompt);
   updateStatusIndicators();
@@ -1984,17 +1993,19 @@ async function testLLM() {
   }
 }
 
-async function callLLM(prompt, key, provider, model, endpoint, maxTok) {
+async function callLLM(prompt, key, provider, model, endpoint, maxTok, sysPrompt) {
   provider = provider||settings.llm_provider;
   key = key||settings.llm_key;
   model = model||settings.llm_model;
   endpoint = endpoint||settings.llm_endpoint;
 
   if(provider==='anthropic') {
+    const body = {model, max_tokens:maxTok||8192, messages:[{role:'user',content:prompt}]};
+    if(sysPrompt) body.system = sysPrompt;
     const r = await fetch('https://api.anthropic.com/v1/messages', {
       method:'POST',
       headers:{'x-api-key':key,'anthropic-version':'2023-06-01','content-type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
-      body: JSON.stringify({model, max_tokens:maxTok||8192, messages:[{role:'user',content:prompt}]})
+      body: JSON.stringify(body)
     });
     if(!r.ok){ const e=await r.json(); throw new Error(e.error?.message||'Anthropic error'); }
     const d = await r.json();
@@ -2003,19 +2014,21 @@ async function callLLM(prompt, key, provider, model, endpoint, maxTok) {
     const url = provider==='openai'?'https://api.openai.com/v1/chat/completions':
                 provider==='groq'?'https://api.groq.com/openai/v1/chat/completions':(endpoint||'');
     if(!url) throw new Error('Endpoint manquant');
+    const msgs = sysPrompt ? [{role:'system',content:sysPrompt},{role:'user',content:prompt}] : [{role:'user',content:prompt}];
     const r = await fetch(url, {
       method:'POST',
       headers:{'Authorization':'Bearer '+key,'Content-Type':'application/json'},
-      body: JSON.stringify({model, messages:[{role:'user',content:prompt}], max_tokens:maxTok||8192})
+      body: JSON.stringify({model, messages:msgs, max_tokens:maxTok||8192})
     });
     if(!r.ok){ const e=await r.json(); throw new Error(e.error?.message||'LLM error'); }
     const d = await r.json();
     return d.choices?.[0]?.message?.content||'';
   } else if(provider==='mistral') {
+    const msgs = sysPrompt ? [{role:'system',content:sysPrompt},{role:'user',content:prompt}] : [{role:'user',content:prompt}];
     const r = await fetch('https://api.mistral.ai/v1/chat/completions', {
       method:'POST',
       headers:{'Authorization':'Bearer '+key,'Content-Type':'application/json'},
-      body: JSON.stringify({model, messages:[{role:'user',content:prompt}], max_tokens:maxTok||8192})
+      body: JSON.stringify({model, messages:msgs, max_tokens:maxTok||8192})
     });
     if(!r.ok){ const e=await r.json(); throw new Error(e.error?.message||'Mistral error'); }
     const d = await r.json();
@@ -2029,6 +2042,7 @@ function saveLLM() {
   settings.llm_model = document.getElementById('llmModel').value;
   settings.llm_key = document.getElementById('llmApiKey').value.trim();
   settings.llm_endpoint = document.getElementById('llmEndpoint')?.value.trim()||'';
+  settings.ia_system_prompt = document.getElementById('iaSystemPrompt')?.value.trim()||'';
   saveSettings(); updateStatusIndicators();
   toast('Paramètres LLM enregistrés');
 }
@@ -2174,7 +2188,7 @@ Génère exactement un JSON avec ces 3 clés :
 RÈGLES : messages naturels comme si écrits par la personne elle-même, pas génériques. Évite "je suis tombé(e) sur ton profil". Commence directement par bonjour + quelque chose de personnel.
 
 JSON uniquement, pas d'autre texte.`;
-    const raw = await callLLM(prompt);
+    const raw = await callLLM(prompt, null, null, null, null, null, settings.ia_system_prompt||'');
     const m = raw.match(/\{[\s\S]*"msgH"[\s\S]*\}/);
     return m ? JSON.parse(m[0]) : null;
   } catch(e){ console.warn('genAccrocheIA:', e.message); return null; }
@@ -2477,14 +2491,22 @@ function buildRaisons(h, f, score) {
 function runAlgorithmicMatching(hommes, femmes, ecartMax, scoreMin, maxMatchs) {
   const bl = settings.blacklist||[];
   const pm = settings.pairesDejaMatchees||[];
+  // Expiration : une paire peut être re-proposée après rotation_mois (défaut 6 mois)
+  const moisExp = settings.rotation_mois||6;
+  const limitDate = new Date();
+  limitDate.setMonth(limitDate.getMonth()-moisExp);
   const allPairs=[];
   for(const h of hommes){
     for(const f of femmes){
       // Vérif blacklist
       const blk = bl.find(b=>(b.h_id===h.id&&b.f_id===f.id)||(b.h_id===h.prenom&&b.f_id===f.prenom));
       if(blk){ continue; }
-      // Vérif paires déjà matchées (acceptées/envoyées dans sessions précédentes)
-      const deja = pm.find(b=>(b.h_id===h.id&&b.f_id===f.id)||(b.h_prenom===h.prenom&&b.f_prenom===f.prenom));
+      // Vérif paires déjà matchées — exclues seulement si matchées il y a moins de rotation_mois mois
+      const deja = pm.find(b=>{
+        if(!((b.h_id===h.id&&b.f_id===f.id)||(b.h_prenom===h.prenom&&b.f_prenom===f.prenom))) return false;
+        if(!b.date) return true; // pas de date = exclure par sécurité
+        return new Date(b.date)>limitDate; // encore dans la fenêtre d'exclusion
+      });
       if(deja){ continue; }
       const ecart=Math.abs((+h.age||0)-(+f.age||0));
       if(ecart>ecartMax) continue;
@@ -2569,6 +2591,12 @@ function buildPrompt() {
 }
 
 async function lancerMatching() {
+  // ── Garde-fou mensuel ──────────────────────────────────────────────────────
+  const _cm = new Date().toISOString().slice(0,7); // YYYY-MM
+  if(settings.last_matching_month===_cm) {
+    const moisLabel = new Date().toLocaleDateString('fr',{month:'long',year:'numeric'});
+    if(!confirm(`Un matching a déjà été lancé en ${moisLabel}.\nRelancer quand même pour ce mois-ci ?`)) return;
+  }
   const btn = document.getElementById('lancerBtn');
   btn.disabled=true; btn.innerHTML='<span class="spin">⟳</span> Analyse en cours…';
   document.getElementById('logbox').style.display='block';
@@ -2738,8 +2766,9 @@ async function lancerMatching() {
     document.getElementById('matchDone').style.display='flex';
     addLog(`🎉 MATCHING TERMINÉ — ${matchsData.length} paires · ${H.length} hommes × ${F.length} femmes · Moyenne ${avg}%`,'success');
     toast(`✅ ${matchsData.length} matchs générés sur ${H.length}H × ${F.length}F`);
-    // Sauvegarder session dans historique
+    // Sauvegarder session dans historique + verrouillage mensuel
     sauvegarderSession({nbMatchs:matchsData.length, nbH:H.length, nbF:F.length, avg:+avg, top:+top, excellent, matchs:[...matchsData]});
+    settings.last_matching_month = _cm; saveSettings();
 
   } catch(e) {
     addLog('❌ Erreur fatale : '+e.message,'err');
@@ -3109,7 +3138,7 @@ async function genSummaryMatch(personne, matchPers, score) {
     + 'Valeurs communes : ' + valsCommunes + ' | Score : ' + (score||'') + '%\n\n'
     + 'Portrait :';
   try {
-    var result = await callLLM(sysPrompt);
+    var result = await callLLM(sysPrompt, null, null, null, null, null, settings.ia_system_prompt||'');
     return (result||'').trim();
   } catch(e) { return null; }
 }
@@ -3134,6 +3163,12 @@ async function envoyerFicheWAAvecResume(evt, matchId, who) {
   var msg = buildMsgNotifWA(personne, matchPers, m.score, summary);
   if(btn){ btn.innerHTML = origHTML; btn.disabled = false; }
   window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank');
+  // Mémoriser la paire comme envoyée pour la rotation mensuelle
+  if(m.statut==='En attente') {
+    matchsData = matchsData.map(x=>x.id===m.id?{...x,statut:'Envoyé'}:x);
+    marquerPaireMatchee({...m,statut:'Envoyé'});
+    renderMatchs(); renderDashboard();
+  }
 }
 
 // Envoyer le message d'accroche via WhatsApp
