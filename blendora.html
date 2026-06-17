@@ -583,10 +583,27 @@ td{padding:10px 16px}
         <span id="promptSaveStatus" style="font-size:12px;color:#22c55e;font-weight:600;display:none">&#10003; Sauvegardé</span>
       </div>
       <div style="display:none">
-        <textarea id="promptPremium"></textarea>
         <textarea id="iaSystemPrompt"></textarea>
       </div>
     </div>
+    <!-- Prompt Premium -->
+    <div style="margin-top:16px;padding-top:16px;border-top:1.5px solid #f1f5f9">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <span style="font-weight:700;color:#1e293b;font-size:13px">&#11088; Prompt &#8212; Analyse Premium</span>
+        <span style="font-size:11px;background:#fdf4ff;color:#9333ea;padding:2px 8px;border-radius:20px;border:1px solid #e9d5ff">Notification premium</span>
+      </div>
+      <textarea id="promptPremium" rows="5"
+        placeholder="Ex : Tu es conseiller en rencontres Blendora. Génère un message d'accroche chaleureux et personnalisé..."
+        style="width:100%;box-sizing:border-box;resize:vertical;font-family:inherit;font-size:13px;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:12px;background:#f8fafc;color:#1e293b;line-height:1.6"></textarea>
+      <div style="font-size:11px;color:#94a3b8;margin-top:5px;margin-bottom:10px">Prompt utilisé pour le message d'accroche, la suggestion de rendez-vous et l'analyse des langages de l'amour dans la notification premium (⭐). Laissez vide pour le comportement par défaut.</div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <button onclick="savePromptPremium()" style="background:linear-gradient(135deg,#9333ea,#7c3aed);color:#fff;border:none;border-radius:12px;padding:9px 20px;font-weight:700;font-size:13px;cursor:pointer">&#128190; Sauvegarder le prompt premium</button>
+        <button onclick="resetPromptPremium()" style="background:#f1f5f9;color:#64748b;border:1.5px solid #e2e8f0;border-radius:12px;padding:9px 16px;font-weight:600;font-size:13px;cursor:pointer">&#8617; Réinitialiser</button>
+        <span id="promptPremiumSaveStatus" style="font-size:12px;color:#22c55e;font-weight:600;display:none">&#10003; Sauvegardé</span>
+      </div>
+    </div>
+  </div>
+</div>
 
 
 <!-- MODAL PARTICIPANT -->
@@ -2016,6 +2033,22 @@ function resetPrompt() {
   var el = document.getElementById('promptMatch');
   if(el) el.value = '';
   toast('Prompt réinitialisé');
+}
+
+function savePromptPremium() {
+  settings.ia_prompt_premium = document.getElementById('promptPremium')?.value.trim()||'';
+  saveSettings();
+  var status = document.getElementById('promptPremiumSaveStatus');
+  if(status){ status.style.display='inline'; setTimeout(function(){ status.style.display='none'; }, 2500); }
+  toast('Prompt premium sauvegardé ✅');
+}
+
+function resetPromptPremium() {
+  settings.ia_prompt_premium = '';
+  saveSettings();
+  var el = document.getElementById('promptPremium');
+  if(el) el.value = '';
+  toast('Prompt premium réinitialisé');
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -5038,8 +5071,50 @@ function saveEvenements() {
   try { localStorage.setItem('blendora_evenements', JSON.stringify(evenements)); } catch(e){}
 }
 
+var _evImageData = null;
+
+function resizeImageToBase64(file, maxW, maxH, quality) {
+  return new Promise(function(resolve) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var img = new Image();
+      img.onload = function() {
+        var w = img.width, h = img.height;
+        if(w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+        if(h > maxH) { w = Math.round(w * maxH / h); h = maxH; }
+        var canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality||0.75));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function previewEvImageForm(input) {
+  var file = input.files[0];
+  if(!file) return;
+  _evImageData = await resizeImageToBase64(file, 800, 400, 0.75);
+  var prev = document.getElementById('evImagePreview');
+  if(prev) {
+    prev.innerHTML = '<img src="'+_evImageData+'" style="width:100%;height:160px;object-fit:cover;border-radius:12px;display:block"/>'+
+      '<button type="button" onclick="supprimerEvImage()" style="margin-top:6px;background:#fff1f2;color:#e11d48;border:none;border-radius:8px;padding:4px 12px;font-size:12px;font-weight:600;cursor:pointer">&#x1F5D1; Supprimer</button>';
+  }
+}
+
+function supprimerEvImage() {
+  _evImageData = null;
+  var prev = document.getElementById('evImagePreview');
+  if(prev) prev.innerHTML = '';
+  var inp = document.getElementById('evImageInput');
+  if(inp) inp.value = '';
+}
+
 function ouvrirCreerEvenement(idEdit) {
   const ev = idEdit ? evenements.find(e=>e.id===idEdit) : null;
+  _evImageData = (ev && ev.image) ? ev.image : null;
   const div = document.createElement('div');
   div.style.cssText='position:fixed;inset:0;background:rgba(15,23,42,.6);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto';
   // Options participants
@@ -5061,6 +5136,12 @@ function ouvrirCreerEvenement(idEdit) {
         <select id="evParticipants" multiple style="height:120px;border:1.5px solid #e2e8f0;border-radius:12px;padding:8px;font-size:13px;background:#f8fafc">${opts}</select>
       </div>
       <div class="field"><label>Notes</label><textarea id="evNotes" rows="3" placeholder="Informations complémentaires…" style="padding:10px;border:1.5px solid #e2e8f0;border-radius:12px;font-size:13px">${ev?.notes||''}</textarea></div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">
+        <label style="font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.04em">&#x1F4F7; Photo de l'événement <span style="font-size:11px;font-weight:400;color:#94a3b8;text-transform:none">(optionnel)</span></label>
+        <input id="evImageInput" type="file" accept="image/*" onchange="previewEvImageForm(this)" style="display:none"/>
+        <button type="button" onclick="document.getElementById('evImageInput').click()" style="background:#f8fafc;border:1.5px dashed #e2e8f0;border-radius:12px;padding:12px 20px;font-size:13px;color:#64748b;cursor:pointer;width:100%;text-align:center;font-weight:600">&#x1F4C1; Choisir une photo…</button>
+        <div id="evImagePreview">${(ev&&ev.image)?'<img src="'+ev.image+'" style="width:100%;height:160px;object-fit:cover;border-radius:12px;display:block;margin-top:4px"/><button type="button" onclick="supprimerEvImage()" style="margin-top:6px;background:#fff1f2;color:#e11d48;border:none;border-radius:8px;padding:4px 12px;font-size:12px;font-weight:600;cursor:pointer">&#x1F5D1; Supprimer</button>':''}</div>
+      </div>
       <div style="display:flex;gap:10px;justify-content:flex-end">
         <button onclick="this.closest('[style*=fixed]').remove()" style="background:#f1f5f9;color:#475569;border:none;border-radius:12px;padding:10px 20px;font-weight:600;font-size:14px">Annuler</button>
         <button onclick="sauvegarderEvenement('${idEdit||''}',this)" style="background:linear-gradient(135deg,#f43f5e,#ec4899);color:#fff;border:none;border-radius:12px;padding:10px 24px;font-weight:700;font-size:14px">💾 Sauvegarder</button>
@@ -5080,7 +5161,9 @@ function sauvegarderEvenement(idEdit, btn) {
   const selEl = document.getElementById('evParticipants');
   const invites = selEl ? [...selEl.selectedOptions].map(o=>o.value) : [];
   if(!nom||!date){ toast('Renseignez au minimum le nom et la date','warn'); return; }
-  const ev = {id:idEdit||('EV'+Date.now()), nom, date, heure, lieu, theme, notes, participants:invites, created:new Date().toISOString()};
+  const evImage = _evImageData || '';
+  const ev = {id:idEdit||('EV'+Date.now()), nom, date, heure, lieu, theme, notes, participants:invites, image:evImage, created:new Date().toISOString()};
+  _evImageData = null;
   if(idEdit) evenements = evenements.map(e=>e.id===idEdit?ev:e);
   else evenements.unshift(ev);
   saveEvenements();
@@ -5108,6 +5191,7 @@ function renderCalendrier() {
       return p ? p : null;
     }).filter(Boolean);
     return `<div class="card" style="border-left:4px solid ${isPast?'#94a3b8':'#f43f5e'};opacity:${isPast?'0.75':'1'}">
+      ${ev.image ? '<img src="' + ev.image + '" style="width:100%;height:180px;object-fit:cover;border-radius:16px;margin-bottom:12px;display:block"/>' : ''}
       <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px">
         <div>
           <div style="font-weight:800;font-size:16px;color:#1e293b">${ev.nom}</div>
