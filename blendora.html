@@ -1100,7 +1100,8 @@ function loadSettings() {
     // Migration : reset template si ancien format (sans resume_ia_block ou sans le nouveau footer)
     if(settings.wa_notif_template && (
       settings.wa_notif_template.indexOf('{{resume_ia_block}}') === -1 ||
-      settings.wa_notif_template.indexOf('4 €') === -1
+      settings.wa_notif_template.indexOf('4 €') === -1 ||
+        settings.wa_notif_template.indexOf('{{bio_match}}') !== -1
     )) {
       settings.wa_notif_template = null;
       saveSettings();
@@ -1520,7 +1521,7 @@ async function notifierMatchDepuisFiche(id, evt) {
   var summary = '';
   if(settings.llm_key || settings.llm_provider) {
     try {
-      var res = await genSummaryMatch(p, matchP, m.score);
+      var res = await genSummaryProfil(matchP);
       if(res && res.length > 5) summary = res;
     } catch(e) {}
   }
@@ -3130,26 +3131,32 @@ async function genSummaryProfil(p) {
   if(!settings.llm_key && !settings.llm_provider) return null;
   var vals = Array.isArray(p.valeurs) ? p.valeurs.join(', ') : (p.valeurs||'');
   var acts = Array.isArray(p.activites) ? p.activites.join(', ') : (p.activites||'');
-    var sysPrompt = 'Tu es un assistant Blendora. A partir des informations ci-dessous, redige un court portrait factuel en 2 phrases maximum, en francais. Sois concis, neutre et informatif. Ne repete pas les noms des champs. Ne mets pas de titre. Si les informations sont insuffisantes, ecris : "Profil incomplet."\n\n'
-    + 'Profil :\n'
+  var DEFAULT_PROMPT = 'You are an expert profile summarizer for a dating and social matching platform. '
+    + 'Analyze the provided personal information and write a short summary highlighting key characteristics, lifestyle, values, and what makes this person unique. '
+    + 'Avoid repeating field names. Do not include missing or empty information. '
+    + 'Output: exactly 2 sentences in French, plain text, concise and factual. '
+    + 'If there is not enough information, write: "Profil incomplet : informations insuffisantes."\n\n';
+  var basePrompt = settings.ia_prompt_match || DEFAULT_PROMPT;
+  var sysPrompt = basePrompt
+    + 'Context:\n'
     + 'Prenom : ' + (p.prenom||'') + '\n'
     + 'Sexe : ' + (p.sexe||'') + '\n'
     + 'Age : ' + (p.age||'') + '\n'
     + 'Ville : ' + (p.ville||'') + '\n'
-    + 'Profession : ' + (p.profession||'') + '\n'
+    + 'Situation familiale : ' + (p.famille||'') + '\n'
     + 'Rythme de vie : ' + (p.rythme||'') + '\n'
     + 'Activites : ' + acts + '\n'
-    + 'Valeurs : ' + vals + '\n'
+    + 'Valeurs top3 : ' + vals + '\n'
     + 'Role en relation : ' + (p.role||'') + '\n'
-    + 'Langage de l\'amour : ' + (p.langage||'') + '\n'
-    + 'Projet de vie : ' + (p.projet||'') + '\n'
-    + 'Portrait :';
+    + 'Langage de l'amour : ' + (p.langage||'') + '\n'
+    + 'Output:';
   try {
     var result = await callLLM(sysPrompt);
     return (result||'').trim();
   } catch(e) {
     return null;
   }
+}
 }
 
 // Résumé IA contextualisé au duo (match + compatibilité)
@@ -3190,7 +3197,7 @@ async function envoyerFicheWAAvecResume(evt, matchId, who) {
   var summary = '';
   if(settings.llm_key || settings.llm_provider) {
     try {
-      var res = await genSummaryMatch(personne, matchPers, m.score);
+      var res = await genSummaryProfil(matchPers);
       if(res && res.length > 5) summary = res;
     } catch(e) {}
   }
@@ -3389,7 +3396,7 @@ Nous avons le plaisir de vous presenter votre match du mois Blendora.
 {{prenom_match}} {{nom_match}} — {{age_match}} ans
 📍 Ville : {{ville_match}}
 💼 Profession : {{profession_match}}
-{{bio_match}}{{photo_match}}📱 WhatsApp : {{whatsapp_match}}
+📱 WhatsApp : {{whatsapp_match}}
 📧 Email : {{email_match}}
 Compatibilite : {{score}}%
 ━━━━━━━━━━━━━━━━━━━{{resume_ia_block}}
@@ -7218,20 +7225,4 @@ function suggestionIAGroupes() {
 function importerGroupeSuggere(idx) {
   var target = window._modalGroupesSugg;
   if(!target||!target._groupesSugg) return;
-  var g = target._groupesSugg[idx]; if(!g) return;
-  currentGroupeMembers = g.membres.map(function(p){return p.id;});
-  currentGroupeTaille = g.membres.length<=6?6:12;
-  var btnT = document.getElementById(currentGroupeTaille===6?'btnT6':'btnT12');
-  setGroupeTaille(currentGroupeTaille, btnT);
-  var nomEl = document.getElementById('groupeNom');
-  if(nomEl) nomEl.value = g.nom;
-  target.remove();
-  window._modalGroupesSugg = null;
-  renderGroupeBuilder();
-  renderGroupeParticipants();
-  toast('Groupe importe dans le builder !');
-}
-
-</script>
-</body>
-</html>
+  var g =
