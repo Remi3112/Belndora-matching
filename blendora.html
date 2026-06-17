@@ -3148,7 +3148,7 @@ async function genSummaryProfil(p) {
     + 'Activites : ' + acts + '\n'
     + 'Valeurs top3 : ' + vals + '\n'
     + 'Role en relation : ' + (p.role||'') + '\n'
-    + 'Langage de l'amour : ' + (p.langage||'') + '\n'
+    + 'Langage de l\'amour : ' + (p.langage||'') + '\n'
     + 'Output:';
   try {
     var result = await callLLM(sysPrompt);
@@ -3156,7 +3156,6 @@ async function genSummaryProfil(p) {
   } catch(e) {
     return null;
   }
-}
 }
 
 // Résumé IA contextualisé au duo (match + compatibilité)
