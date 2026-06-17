@@ -568,19 +568,23 @@ td{padding:10px 16px}
       <button onclick="saveLLM()" style="background:linear-gradient(135deg,#f43f5e,#ec4899);color:#fff;border:none;border-radius:12px;padding:9px 20px;font-weight:700;font-size:13px">💾 Enregistrer</button>
     </div>
     <div id="llmTestResult" style="display:none;margin-top:12px;padding:10px 14px;border-radius:12px;font-size:13px;font-weight:500"></div>
-    <div style="margin-top:16px;display:flex;flex-direction:column;gap:14px">
-      <div class="field" style="margin-bottom:0">
-        <label style="font-weight:700;color:#1e293b;font-size:13px">🎯 Prompt — Notification standard (résumé de match)</label>
-        <textarea id="promptMatch" rows="4" placeholder="Ex : Tu es un assistant Blendora. Sois factuel, chaleureux et concis. Décris le match en 2 phrases et mets en avant un point fort de compatibilité avec le destinataire." oninput="markDirty('llm')" style="width:100%;box-sizing:border-box;resize:vertical;font-family:inherit;font-size:13px;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:12px;background:#f8fafc;color:#1e293b;line-height:1.5;margin-top:6px"></textarea>
-        <div style="font-size:11px;color:#94a3b8;margin-top:5px">Utilisé par l'IA pour générer le résumé dans la notification WhatsApp standard. Laissez vide pour le comportement par défaut.</div>
+    <div style="margin-top:16px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <span style="font-weight:700;color:#1e293b;font-size:13px">🧠 Prompt — Résumé du profil</span>
+        <span style="font-size:11px;color:#94a3b8;background:#f1f5f9;padding:2px 8px;border-radius:20px">Notification standard</span>
       </div>
-      <div class="field" style="margin-bottom:0">
-        <label style="font-weight:700;color:#1e293b;font-size:13px">&#11088; Prompt — Analyse Premium (accroche + suggestion RDV)</label>
-        <textarea id="promptPremium" rows="4" placeholder="Ex : Tu es un conseiller en rencontres Blendora. Tu rédiges des messages d'accroche personnalisés, chaleureux et naturels. Tu proposes une idée de rendez-vous adaptée aux profils." oninput="markDirty('llm')" style="width:100%;box-sizing:border-box;resize:vertical;font-family:inherit;font-size:13px;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:12px;background:#f8fafc;color:#1e293b;line-height:1.5;margin-top:6px"></textarea>
-        <div style="font-size:11px;color:#94a3b8;margin-top:5px">Utilisé par l'IA pour générer la phrase d'accroche personnalisée et la suggestion de RDV (bouton Premium). Laissez vide pour le comportement par défaut.</div>
+      <textarea id="promptMatch" rows="5"
+        placeholder="Ex : Tu es un assistant Blendora bienveillant. En 2 phrases max, décris le profil du match de façon chaleureuse et mets en avant ce qui fait que cette rencontre a du sens. Ton positif, jamais générique."
+        style="width:100%;box-sizing:border-box;resize:vertical;font-family:inherit;font-size:13px;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:12px;background:#f8fafc;color:#1e293b;line-height:1.6"></textarea>
+      <div style="font-size:11px;color:#94a3b8;margin-top:5px;margin-bottom:10px">Ce prompt est injecté avant le contexte des profils lors de la génération du résumé IA dans la notification WhatsApp. Laissez vide pour le comportement par défaut.</div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <button onclick="savePrompt()" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:12px;padding:9px 20px;font-weight:700;font-size:13px;cursor:pointer">💾 Sauvegarder le prompt</button>
+        <button onclick="resetPrompt()" style="background:#f1f5f9;color:#64748b;border:1.5px solid #e2e8f0;border-radius:12px;padding:9px 16px;font-weight:600;font-size:13px;cursor:pointer">↩ Réinitialiser</button>
+        <span id="promptSaveStatus" style="font-size:12px;color:#22c55e;font-weight:600;display:none">✅ Sauvegardé</span>
       </div>
-      <div class="field" style="margin-bottom:0;display:none">
-        <textarea id="iaSystemPrompt" style="display:none"></textarea>
+      <div style="display:none">
+        <textarea id="promptPremium"></textarea>
+        <textarea id="iaSystemPrompt"></textarea>
       </div>
     </div>
   </div>
@@ -2057,6 +2061,23 @@ function saveLLM() {
   settings.ia_prompt_premium = document.getElementById('promptPremium')?.value.trim()||'';
   saveSettings(); updateStatusIndicators();
   toast('Paramètres LLM enregistrés');
+}
+
+function savePrompt() {
+  settings.ia_prompt_match = document.getElementById('promptMatch')?.value.trim()||'';
+  saveSettings();
+  // Feedback visuel dédié
+  var status = document.getElementById('promptSaveStatus');
+  if(status){ status.style.display='inline'; setTimeout(function(){ status.style.display='none'; }, 2500); }
+  toast('Prompt sauvegardé ✅');
+}
+
+function resetPrompt() {
+  settings.ia_prompt_match = '';
+  saveSettings();
+  var el = document.getElementById('promptMatch');
+  if(el) el.value = '';
+  toast('Prompt réinitialisé');
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
