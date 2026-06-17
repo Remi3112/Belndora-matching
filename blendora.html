@@ -2559,12 +2559,14 @@ function buildPrompt() {
   const tog2On = document.getElementById('tog2').querySelector('.toggle-knob').style.left==='23px';
   const H = participants.filter(p=>{
     if(p.sexe!=='Homme') return false;
+    if(p.blocked) return false;
     if(tog2On && p.doublon===true) return false;
     if(tog1On && p.actif===false) return false;
     return true;
   });
   const F = participants.filter(p=>{
     if(p.sexe!=='Femme') return false;
+    if(p.blocked) return false;
     if(tog2On && p.doublon===true) return false;
     if(tog1On && p.actif===false) return false;
     return true;
@@ -2659,16 +2661,20 @@ async function lancerMatching() {
     const tog2On = document.getElementById('tog2').querySelector('.toggle-knob').style.left==='23px';
     const H = participants.filter(p=>{
       if(p.sexe!=='Homme') return false;
+      if(p.blocked) return false;
       if(tog2On && p.doublon===true) return false;
       if(tog1On && p.actif===false) return false;
       return true;
     });
     const F = participants.filter(p=>{
       if(p.sexe!=='Femme') return false;
+      if(p.blocked) return false;
       if(tog2On && p.doublon===true) return false;
       if(tog1On && p.actif===false) return false;
       return true;
     });
+    const blockedCount = participants.filter(p=>p.blocked).length;
+    if(blockedCount>0) addLog(`🚫 ${blockedCount} profil${blockedCount>1?'s':''} bloqué${blockedCount>1?'s':''} — exclu${blockedCount>1?'s':''} du matching`,'warn');
 
     if(H.length===0||F.length===0) {
       addLog(`❌ PROBLÈME : ${H.length} hommes et ${F.length} femmes après filtrage`,'err');
@@ -3537,7 +3543,7 @@ function renderSuggestionsManuel() {
   const scoreMin = +(document.getElementById('manuelScoreMin')||{value:50}).value||50;
   // Candidats = sexe opposé
   const sexeOpp = p.sexe==='Homme'?'Femme':'Homme';
-  const candidats = participants.filter(c=>c.sexe===sexeOpp && c.id!==p.id);
+  const candidats = participants.filter(c=>c.sexe===sexeOpp && c.id!==p.id && !c.blocked);
   const bl = settings.blacklist||[];
 
   // Calcul des scores + vérif blacklist + matchs existants
@@ -3600,6 +3606,11 @@ function creerMatchManuel(id1, id2) {
   const p1 = participants.find(x=>x.id===id1);
   const p2 = participants.find(x=>x.id===id2);
   if(!p1||!p2) { toast('Participant introuvable','err'); return; }
+  if(p1.blocked||p2.blocked) {
+    const nom = (p1.blocked?p1:p2).prenom;
+    toast(`${nom} est bloqué — impossible de créer un match`,'warn');
+    return;
+  }
   const h = p1.sexe==='Homme'?p1:p2;
   const f = p1.sexe==='Homme'?p2:p1;
   const score = calcScore(h,f);
@@ -5104,10 +5115,28 @@ async function previewEvImageForm(input) {
   }
 }
 
+function previewEvImageFormFile(file) {
+  resizeImageToBase64(file, 800, 400, 0.75).then(function(dataUrl) {
+    _evImageData = dataUrl;
+    var prev = document.getElementById('evImagePreview');
+    if(prev) {
+      prev.innerHTML = '<img src="'+dataUrl+'" style="width:100%;height:160px;object-fit:cover;border-radius:12px;display:block"/>'
+        +'<button type="button" id="evImgDelBtn2" style="margin-top:6px;background:#fff1f2;color:#e11d48;border:none;border-radius:8px;padding:4px 12px;font-size:12px;font-weight:600;cursor:pointer">&#x1F5D1; Supprimer la photo</button>';
+      var db = prev.querySelector('#evImgDelBtn2');
+      if(db) db.addEventListener('click', supprimerEvImage);
+    }
+    var zone = document.getElementById('evImgZone');
+    if(zone) zone.style.borderColor='#f43f5e';
+    toast('Photo ajoutée ✅');
+  }).catch(function(e){ toast('Erreur lecture image','warn'); });
+}
+
 function supprimerEvImage() {
   _evImageData = null;
   var prev = document.getElementById('evImagePreview');
   if(prev) prev.innerHTML = '';
+  var zone = document.getElementById('evImgZone');
+  if(zone) zone.style.borderColor='#cbd5e1';
   var inp = document.getElementById('evImageInput');
   if(inp) inp.value = '';
 }
@@ -5116,11 +5145,14 @@ function ouvrirCreerEvenement(idEdit) {
   const ev = idEdit ? evenements.find(e=>e.id===idEdit) : null;
   _evImageData = (ev && ev.image) ? ev.image : null;
   const div = document.createElement('div');
-  div.style.cssText='position:fixed;inset:0;background:rgba(15,23,42,.6);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto';
-  // Options participants
+  div.style.cssText='position:fixed;inset:0;background:rgba(15,23,42,.6);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto';
   const opts = participants.filter(p=>p.actif!==false).map(p=>`<option value="${p.id||p.prenom}" ${(ev?.participants||[]).includes(p.id||p.prenom)?'selected':''}>${p.prenom} ${p.nom} (${p.sexe[0]}, ${p.age||'?'} ans)</option>`).join('');
-  div.innerHTML=`<div style="background:#fff;border-radius:24px;max-width:520px;width:100%;box-shadow:0 25px 60px rgba(0,0,0,.2);overflow:hidden">
-    <div style="background:linear-gradient(135deg,#f43f5e,#ec4899);padding:20px 24px">
+  const imgPreviewHtml = (ev&&ev.image)
+    ? '<img src="'+ev.image+'" style="width:100%;height:160px;object-fit:cover;border-radius:12px;display:block;margin-top:8px"/>'
+      +'<button type="button" id="evImgDelBtn" style="margin-top:6px;background:#fff1f2;color:#e11d48;border:none;border-radius:8px;padding:4px 12px;font-size:12px;font-weight:600;cursor:pointer">&#x1F5D1; Supprimer la photo</button>'
+    : '';
+  div.innerHTML=`<div style="background:#fff;border-radius:24px;max-width:520px;width:100%;box-shadow:0 25px 60px rgba(0,0,0,.2);margin:auto">
+    <div style="background:linear-gradient(135deg,#f43f5e,#ec4899);padding:20px 24px;border-radius:24px 24px 0 0">
       <div style="font-weight:800;font-size:18px;color:#fff">${idEdit?'✏️ Modifier':'🗓️ Créer'} un événement</div>
     </div>
     <div style="padding:20px;display:flex;flex-direction:column;gap:14px">
@@ -5136,19 +5168,42 @@ function ouvrirCreerEvenement(idEdit) {
         <select id="evParticipants" multiple style="height:120px;border:1.5px solid #e2e8f0;border-radius:12px;padding:8px;font-size:13px;background:#f8fafc">${opts}</select>
       </div>
       <div class="field"><label>Notes</label><textarea id="evNotes" rows="3" placeholder="Informations complémentaires…" style="padding:10px;border:1.5px solid #e2e8f0;border-radius:12px;font-size:13px">${ev?.notes||''}</textarea></div>
-      <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">
-        <label style="font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.04em">&#x1F4F7; Photo de l'événement <span style="font-size:11px;font-weight:400;color:#94a3b8;text-transform:none">(optionnel)</span></label>
-        <input id="evImageInput" type="file" accept="image/*" onchange="previewEvImageForm(this)" style="display:none"/>
-        <button type="button" onclick="document.getElementById('evImageInput').click()" style="background:#f8fafc;border:1.5px dashed #e2e8f0;border-radius:12px;padding:12px 20px;font-size:13px;color:#64748b;cursor:pointer;width:100%;text-align:center;font-weight:600">&#x1F4C1; Choisir une photo…</button>
-        <div id="evImagePreview">${(ev&&ev.image)?'<img src="'+ev.image+'" style="width:100%;height:160px;object-fit:cover;border-radius:12px;display:block;margin-top:4px"/><button type="button" onclick="supprimerEvImage()" style="margin-top:6px;background:#fff1f2;color:#e11d48;border:none;border-radius:8px;padding:4px 12px;font-size:12px;font-weight:600;cursor:pointer">&#x1F5D1; Supprimer</button>':''}</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.04em">&#x1F4F7; Photo de l'événement <span style="font-size:11px;font-weight:400;color:#94a3b8;text-transform:none">(optionnel)</span></div>
+        <div id="evImgZone" style="background:#f8fafc;border:2px dashed #cbd5e1;border-radius:12px;padding:18px 20px;text-align:center;cursor:pointer;font-size:13px;color:#64748b;font-weight:600">
+          &#x1F4F7; Cliquer pour choisir une photo
+        </div>
+        <div id="evImagePreview" style="margin-top:4px">${imgPreviewHtml}</div>
       </div>
       <div style="display:flex;gap:10px;justify-content:flex-end">
         <button onclick="this.closest('[style*=fixed]').remove()" style="background:#f1f5f9;color:#475569;border:none;border-radius:12px;padding:10px 20px;font-weight:600;font-size:14px">Annuler</button>
-        <button onclick="sauvegarderEvenement('${idEdit||''}',this)" style="background:linear-gradient(135deg,#f43f5e,#ec4899);color:#fff;border:none;border-radius:12px;padding:10px 24px;font-weight:700;font-size:14px">💾 Sauvegarder</button>
+        <button onclick="sauvegarderEvenement('${idEdit||''}',this)" style="background:linear-gradient(135deg,#f43f5e,#ec4899);color:#fff;border:none;border-radius:12px;padding:10px 24px;font-weight:700;font-size:14px">&#x1F4BE; Sauvegarder</button>
       </div>
     </div>
   </div>`;
   document.body.appendChild(div);
+  // Input file créé en JS pur — hors innerHTML pour éviter tout conflit CSS
+  var fi = document.createElement('input');
+  fi.type = 'file'; fi.accept = 'image/*'; fi.id = 'evImageInput';
+  fi.style.cssText = 'position:fixed;top:-999px;left:-999px;width:0;height:0;opacity:0';
+  document.body.appendChild(fi);
+  fi.addEventListener('change', function() {
+    if(!fi.files||!fi.files[0]) return;
+    previewEvImageFormFile(fi.files[0]);
+  });
+  var zone = div.querySelector('#evImgZone');
+  if(zone) zone.addEventListener('click', function() { fi.click(); });
+  var delBtn = div.querySelector('#evImgDelBtn');
+  if(delBtn) delBtn.addEventListener('click', function() { supprimerEvImage(); });
+  // Nettoyage de l'input fi quand le modal se ferme
+  var observer = new MutationObserver(function(muts) {
+    muts.forEach(function(m) {
+      m.removedNodes.forEach(function(n) {
+        if(n===div && fi.parentNode) { fi.parentNode.removeChild(fi); observer.disconnect(); }
+      });
+    });
+  });
+  observer.observe(document.body, {childList:true});
 }
 
 function sauvegarderEvenement(idEdit, btn) {
