@@ -570,85 +570,23 @@ td{padding:10px 16px}
     <div id="llmTestResult" style="display:none;margin-top:12px;padding:10px 14px;border-radius:12px;font-size:13px;font-weight:500"></div>
     <div style="margin-top:16px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-        <span style="font-weight:700;color:#1e293b;font-size:13px">🧠 Prompt — Résumé du profil</span>
+        <span style="font-weight:700;color:#1e293b;font-size:13px">&#129504; Prompt — Résumé du profil</span>
         <span style="font-size:11px;color:#94a3b8;background:#f1f5f9;padding:2px 8px;border-radius:20px">Notification standard</span>
       </div>
       <textarea id="promptMatch" rows="5"
-        placeholder="Ex : Tu es un assistant Blendora bienveillant. En 2 phrases max, décris le profil du match de façon chaleureuse et mets en avant ce qui fait que cette rencontre a du sens. Ton positif, jamais générique."
+        placeholder="Ex : Tu es un assistant Blendora. En 2 phrases max, décris le profil de manière chaleureuse et factuelle."
         style="width:100%;box-sizing:border-box;resize:vertical;font-family:inherit;font-size:13px;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:12px;background:#f8fafc;color:#1e293b;line-height:1.6"></textarea>
       <div style="font-size:11px;color:#94a3b8;margin-top:5px;margin-bottom:10px">Ce prompt est injecté avant le contexte des profils lors de la génération du résumé IA dans la notification WhatsApp. Laissez vide pour le comportement par défaut.</div>
       <div style="display:flex;gap:10px;align-items:center">
-        <button onclick="savePrompt()" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:12px;padding:9px 20px;font-weight:700;font-size:13px;cursor:pointer">💾 Sauvegarder le prompt</button>
-        <button onclick="resetPrompt()" style="background:#f1f5f9;color:#64748b;border:1.5px solid #e2e8f0;border-radius:12px;padding:9px 16px;font-weight:600;font-size:13px;cursor:pointer">↩ Réinitialiser</button>
-        <span id="promptSaveStatus" style="font-size:12px;color:#22c55e;font-weight:600;display:none">✅ Sauvegardé</span>
+        <button onclick="savePrompt()" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:12px;padding:9px 20px;font-weight:700;font-size:13px;cursor:pointer">&#128190; Sauvegarder le prompt</button>
+        <button onclick="resetPrompt()" style="background:#f1f5f9;color:#64748b;border:1.5px solid #e2e8f0;border-radius:12px;padding:9px 16px;font-weight:600;font-size:13px;cursor:pointer">&#8617; Réinitialiser</button>
+        <span id="promptSaveStatus" style="font-size:12px;color:#22c55e;font-weight:600;display:none">&#10003; Sauvegardé</span>
       </div>
       <div style="display:none">
         <textarea id="promptPremium"></textarea>
         <textarea id="iaSystemPrompt"></textarea>
       </div>
     </div>
-  </div>
-
-  <!-- Section WhatsApp -->
-  <div class="card" style="margin-bottom:16px">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
-      <div style="width:38px;height:38px;border-radius:12px;background:#f0fdf4;display:flex;align-items:center;justify-content:center;font-size:20px">💬</div>
-      <div><div style="font-weight:700;color:#1e293b;font-size:16px">WhatsApp</div><div style="font-size:12px;color:#94a3b8">Cliquez sur un numéro pour ouvrir WhatsApp directement</div></div>
-    </div>
-    <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:14px;padding:14px;font-size:13px;color:#16a34a">
-      ✅ Actif — Chaque numéro de téléphone est cliquable et ouvre <strong>wa.me</strong> automatiquement dans votre navigateur.
-    </div>
-    <div style="margin-top:12px;display:flex;gap:12px">
-      <div class="field" style="flex:1;margin-bottom:0">
-        <label>Tester un numéro</label>
-        <input type="text" id="waTestNum" placeholder="+33612345678" style=""/>
-      </div>
-      <div style="display:flex;align-items:flex-end">
-        <button onclick="testWA()" style="background:#25d366;color:#fff;border:none;border-radius:12px;padding:10px 16px;font-weight:700;font-size:13px">📲 Ouvrir WhatsApp</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Section Paires déjà matchées -->
-  <div class="card" style="margin-bottom:16px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
-      <div style="display:flex;align-items:center;gap:10px">
-        <div style="width:38px;height:38px;border-radius:12px;background:#eff6ff;display:flex;align-items:center;justify-content:center;font-size:20px">🔁</div>
-        <div>
-          <div style="font-weight:700;color:#1e293b;font-size:16px">Paires déjà matchées</div>
-          <div style="font-size:12px;color:#94a3b8">Exclues automatiquement de chaque nouveau matching (acceptés + envoyés)</div>
-        </div>
-      </div>
-      <button onclick="clearPairesMatchees()" style="background:#eff6ff;color:#2563eb;border:1.5px solid #93c5fd;border-radius:12px;padding:7px 14px;font-weight:700;font-size:12px">🗑️ Réinitialiser</button>
-    </div>
-    <div id="pairesMatcheesZone"></div>
-  </div>
-
-  <!-- Section Blacklist -->
-  <div class="card" style="margin-bottom:16px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
-      <div style="display:flex;align-items:center;gap:10px">
-        <div style="width:38px;height:38px;border-radius:12px;background:#fff1f2;display:flex;align-items:center;justify-content:center;font-size:20px">🚫</div>
-        <div><div style="font-weight:700;color:#1e293b;font-size:16px">Blacklist de paires</div><div style="font-size:12px;color:#94a3b8">Paires exclues définitivement du matching</div></div>
-      </div>
-      <button onclick="clearBlacklist()" style="background:#fff1f2;color:#e11d48;border:1.5px solid #fca5a5;border-radius:12px;padding:7px 14px;font-weight:700;font-size:12px">🗑️ Vider la blacklist</button>
-    </div>
-    <div id="blacklistZone"></div>
-  </div>
-
-  <!-- Section Général -->
-  <div class="card">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
-      <div style="width:38px;height:38px;border-radius:12px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:20px">🗂️</div>
-      <div><div style="font-weight:700;color:#1e293b;font-size:16px">Données locales</div><div style="font-size:12px;color:#94a3b8">Gestion du stockage localStorage</div></div>
-    </div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap">
-      <button onclick="exportSettings()" style="background:#f1f5f9;color:#475569;border:none;border-radius:12px;padding:9px 16px;font-weight:600;font-size:13px">📤 Exporter les paramètres</button>
-      <button onclick="importSettings()" style="background:#f1f5f9;color:#475569;border:none;border-radius:12px;padding:9px 16px;font-weight:600;font-size:13px">📥 Importer</button>
-      <button onclick="clearAll()" style="background:#fff1f2;color:#e11d48;border:none;border-radius:12px;padding:9px 16px;font-weight:600;font-size:13px">🗑️ Réinitialiser tout</button>
-    </div>
-  </div>
-</div>
 
 
 <!-- MODAL PARTICIPANT -->
@@ -2067,7 +2005,6 @@ function saveLLM() {
 function savePrompt() {
   settings.ia_prompt_match = document.getElementById('promptMatch')?.value.trim()||'';
   saveSettings();
-  // Feedback visuel dédié
   var status = document.getElementById('promptSaveStatus');
   if(status){ status.style.display='inline'; setTimeout(function(){ status.style.display='none'; }, 2500); }
   toast('Prompt sauvegardé ✅');
@@ -3177,8 +3114,7 @@ async function genSummaryMatch(personne, matchPers, score) {
     + 'Valeurs communes : ' + valsCommunes + ' | Score : ' + (score||'') + '%\n\n'
     + 'Portrait :';
   try {
-    var customPrompt = settings.ia_prompt_match ? settings.ia_prompt_match + '\n\n' + sysPrompt : sysPrompt;
-    var result = await callLLM(customPrompt);
+    var result = await callLLM(sysPrompt, null, null, null, null, null, settings.ia_system_prompt||'');
     return (result||'').trim();
   } catch(e) { return null; }
 }
@@ -3395,7 +3331,7 @@ Nous avons le plaisir de vous presenter votre match du mois Blendora.
 {{prenom_match}} {{nom_match}} — {{age_match}} ans
 📍 Ville : {{ville_match}}
 💼 Profession : {{profession_match}}
-📱 WhatsApp : {{whatsapp_match}}
+{{photo_match}}📱 WhatsApp : {{whatsapp_match}}
 📧 Email : {{email_match}}
 Compatibilite : {{score}}%
 ━━━━━━━━━━━━━━━━━━━{{resume_ia_block}}
@@ -7224,4 +7160,20 @@ function suggestionIAGroupes() {
 function importerGroupeSuggere(idx) {
   var target = window._modalGroupesSugg;
   if(!target||!target._groupesSugg) return;
-  var g =
+  var g = target._groupesSugg[idx]; if(!g) return;
+  currentGroupeMembers = g.membres.map(function(p){return p.id;});
+  currentGroupeTaille = g.membres.length<=6?6:12;
+  var btnT = document.getElementById(currentGroupeTaille===6?'btnT6':'btnT12');
+  setGroupeTaille(currentGroupeTaille, btnT);
+  var nomEl = document.getElementById('groupeNom');
+  if(nomEl) nomEl.value = g.nom;
+  target.remove();
+  window._modalGroupesSugg = null;
+  renderGroupeBuilder();
+  renderGroupeParticipants();
+  toast('Groupe importe dans le builder !');
+}
+
+</script>
+</body>
+</html>
