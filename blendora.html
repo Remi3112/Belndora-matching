@@ -238,6 +238,7 @@ td{padding:10px 16px}
         <div style="display:flex;gap:8px">
           <span id="llmBadge" style="font-size:11px;padding:3px 10px;border-radius:20px;background:#f0f9ff;color:#0284c7;font-weight:600">—</span>
           <button onclick="resetPrompt()" style="font-size:11px;color:#94a3b8;background:none;border:1px solid #e2e8f0;border-radius:8px;padding:3px 10px">Reset</button>
+          <button id="ameliorerBtn_promptText" onclick="ameliorerPromptIA('promptText','Prompt principal matching IA')" style="font-size:11px;color:#8b5cf6;background:#fdf4ff;border:1px solid #d8b4fe;border-radius:8px;padding:3px 10px;font-weight:600;cursor:pointer">✨ Améliorer avec l'IA</button>
         </div>
       </div>
       <textarea id="promptText" rows="15" style="width:100%;font-size:12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:14px;color:#374151;line-height:1.6"></textarea>
@@ -543,11 +544,12 @@ td{padding:10px 16px}
       <div class="field">
         <label>Provider</label>
         <select id="llmProvider" onchange="updateModelList()" style="background:#f8fafc">
-          <option value="anthropic">Anthropic (Claude)</option>
-          <option value="openai">OpenAI (GPT)</option>
-          <option value="mistral">Mistral AI</option>
-          <option value="groq">Groq</option>
-          <option value="custom">API personnalisée</option>
+          <option value="anthropic">🟣 Anthropic (Claude)</option>
+          <option value="openai">🟢 OpenAI (GPT / o-series)</option>
+          <option value="google">🔵 Google (Gemini)</option>
+          <option value="mistral">🟠 Mistral AI</option>
+          <option value="groq">⚡ Groq (ultra-rapide)</option>
+          <option value="custom">🔧 API personnalisée</option>
         </select>
       </div>
       <div class="field">
@@ -580,6 +582,7 @@ td{padding:10px 16px}
       <div style="display:flex;gap:10px;align-items:center">
         <button onclick="savePrompt()" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:12px;padding:9px 20px;font-weight:700;font-size:13px;cursor:pointer">&#128190; Sauvegarder le prompt</button>
         <button onclick="resetPrompt()" style="background:#f1f5f9;color:#64748b;border:1.5px solid #e2e8f0;border-radius:12px;padding:9px 16px;font-weight:600;font-size:13px;cursor:pointer">&#8617; Réinitialiser</button>
+        <button id="ameliorerBtn_promptMatch" onclick="ameliorerPromptIA('promptMatch','Résumé profil — notification standard')" style="background:#fdf4ff;color:#9333ea;border:1.5px solid #d8b4fe;border-radius:12px;padding:9px 16px;font-weight:600;font-size:13px;cursor:pointer">✨ Améliorer avec l'IA</button>
         <span id="promptSaveStatus" style="font-size:12px;color:#22c55e;font-weight:600;display:none">&#10003; Sauvegardé</span>
       </div>
       <div style="display:none">
@@ -599,6 +602,7 @@ td{padding:10px 16px}
       <div style="display:flex;gap:10px;align-items:center">
         <button onclick="savePromptPremium()" style="background:linear-gradient(135deg,#9333ea,#7c3aed);color:#fff;border:none;border-radius:12px;padding:9px 20px;font-weight:700;font-size:13px;cursor:pointer">&#128190; Sauvegarder le prompt premium</button>
         <button onclick="resetPromptPremium()" style="background:#f1f5f9;color:#64748b;border:1.5px solid #e2e8f0;border-radius:12px;padding:9px 16px;font-weight:600;font-size:13px;cursor:pointer">&#8617; Réinitialiser</button>
+        <button id="ameliorerBtn_promptPremium" onclick="ameliorerPromptIA('promptPremium','Analyse Premium — accroche personnalisée')" style="background:#fdf4ff;color:#9333ea;border:1.5px solid #d8b4fe;border-radius:12px;padding:9px 16px;font-weight:600;font-size:13px;cursor:pointer">✨ Améliorer avec l'IA</button>
         <span id="promptPremiumSaveStatus" style="font-size:12px;color:#22c55e;font-weight:600;display:none">&#10003; Sauvegardé</span>
       </div>
     </div>
@@ -1034,10 +1038,48 @@ let sortMatch = 'score'; // 'score' | 'nom' | 'date'
 let historique = []; // sessions sauvegardées
 
 const LLM_MODELS = {
-  anthropic:['claude-opus-4-6','claude-sonnet-4-6','claude-haiku-4-5-20251001'],
-  openai:['gpt-4o','gpt-4o-mini','gpt-4-turbo','gpt-3.5-turbo'],
-  mistral:['mistral-large-latest','mistral-medium-latest','mistral-small-latest','open-mixtral-8x7b'],
-  groq:['llama-3.1-70b-versatile','llama-3.1-8b-instant','mixtral-8x7b-32768','gemma2-9b-it'],
+  anthropic:[
+    // ── Derniers modèles (2026) ──
+    'claude-fable-5',          // 🔝 Plus puissant — Mythos-class GA (juin 2026)
+    'claude-opus-4-7',         // ⚡ Opus 4.7 — meilleur ingénierie logicielle
+    'claude-opus-4-6',
+    'claude-sonnet-4-6',
+    'claude-haiku-4-5-20251001'
+  ],
+  openai:[
+    // ── Derniers modèles GPT-5 (2026) ──
+    'gpt-5.5',                 // 🔝 Flagship GPT-5.5 (avril 2026)
+    'gpt-5.4',                 // GPT-5.4 (mars 2026)
+    'gpt-5.4-mini',            // Rapide & économique
+    'gpt-4o',
+    'gpt-4o-mini',
+    'o3',
+    'o4-mini'
+  ],
+  google:[
+    // ── Derniers Gemini (2026) ──
+    'gemini-3.5-flash',        // 🔝 Meilleur rapport perf/coût (mai 2026)
+    'gemini-3.1-pro',          // Contexte 2M tokens (fév. 2026)
+    'gemini-2.5-pro',
+    'gemini-2.5-flash',
+    'gemini-1.5-pro'
+  ],
+  mistral:[
+    // ── Magistral & derniers modèles (2026) ──
+    'magistral-medium-2506',   // 🔝 Nouveau raisonnement (juin 2026)
+    'magistral-small-2506',
+    'mistral-small-2506',
+    'mistral-large-2512',
+    'mistral-large-latest'
+  ],
+  groq:[
+    // ── Derniers modèles Groq (2026) ──
+    'llama-4-scout',           // 🔝 Llama 4 Scout
+    'qwen3-32b',               // Qwen3 32B
+    'llama-3.3-70b-versatile',
+    'llama-3.1-8b-instant',
+    'deepseek-r1-distill-llama-70b'
+  ],
   custom:['custom-model']
 };
 
@@ -1108,7 +1150,7 @@ function updateStatusIndicators() {
   if(atDot) atDot.style.background = atOk ? '#22c55e' : '#e2e8f0';
   if(atTxt) { atTxt.textContent = atOk ? 'Connecté' : 'Non connecté'; atTxt.style.color = atOk ? '#22c55e' : '#94a3b8'; }
 
-  const provLabel = {anthropic:'Claude',openai:'GPT',mistral:'Mistral',groq:'Groq',custom:'Custom'}[settings.llm_provider]||'LLM';
+  const provLabel = {anthropic:'Claude',openai:'GPT',google:'Gemini',mistral:'Mistral',groq:'Groq',custom:'Custom'}[settings.llm_provider]||'LLM';
   if(dotLLM) dotLLM.style.background = llmOk ? '#22c55e' : '#e2e8f0';
   if(llmDot2) llmDot2.style.background = llmOk ? '#22c55e' : '#e2e8f0';
   if(llmTxt) { llmTxt.textContent = llmOk ? `${provLabel} (${settings.llm_model||'—'})` : 'Non configuré'; llmTxt.style.color = llmOk ? '#22c55e' : '#94a3b8'; }
@@ -2003,6 +2045,18 @@ async function callLLM(prompt, key, provider, model, endpoint, maxTok, sysPrompt
     if(!r.ok){ const e=await r.json(); throw new Error(e.error?.message||'Mistral error'); }
     const d = await r.json();
     return d.choices?.[0]?.message?.content||'';
+  } else if(provider==='google') {
+    const contents = [];
+    if(sysPrompt) contents.push({role:'user',parts:[{text:'[SYSTEM] '+sysPrompt}]},{role:'model',parts:[{text:'Compris.'}]});
+    contents.push({role:'user',parts:[{text:prompt}]});
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({contents, generationConfig:{maxOutputTokens:maxTok||8192}})
+    });
+    if(!r.ok){ const e=await r.json(); throw new Error(e.error?.message||'Google Gemini error'); }
+    const d = await r.json();
+    return d.candidates?.[0]?.content?.parts?.[0]?.text||'';
   }
   throw new Error('Provider non supporté');
 }
@@ -2033,6 +2087,44 @@ function resetPrompt() {
   var el = document.getElementById('promptMatch');
   if(el) el.value = '';
   toast('Prompt réinitialisé');
+}
+
+async function ameliorerPromptIA(targetId, nomPrompt) {
+  if(!settings.llm_key) { toast('Configurez votre clé API LLM dans Réglages', 'warn'); return; }
+  const ta = document.getElementById(targetId);
+  if(!ta) return;
+  const contenu = ta.value.trim();
+  if(!contenu) { toast('Le prompt est vide — écrivez quelque chose d\'abord', 'warn'); return; }
+  const btnId = 'ameliorerBtn_'+targetId;
+  const btn = document.getElementById(btnId);
+  if(btn){ btn.disabled=true; btn.innerHTML='⏳ Amélioration…'; }
+  try {
+    const meta = `Tu es expert en prompt engineering pour logiciels de matching amoureux.
+
+Améliore ce prompt utilisé dans l'application Blendora (matching de rencontres) :
+"""
+${contenu}
+"""
+
+Contexte de ce prompt : "${nomPrompt||'fonctionnalité Blendora'}".
+
+Objectifs :
+- Rendre les instructions plus claires et précises
+- Améliorer la qualité et la cohérence des réponses IA
+- Adapter le ton au contexte romantique et bienveillant de Blendora
+- Structurer logiquement les consignes
+
+Retourne UNIQUEMENT le prompt amélioré, sans guillemets, sans explication, sans commentaire.`;
+    const improved = await callLLM(meta, null, null, null, null, 4096);
+    if(improved && improved.trim()) {
+      ta.value = improved.trim();
+      toast('✨ Prompt amélioré par l\'IA !');
+    }
+  } catch(e) {
+    toast('Erreur IA : '+e.message, 'err');
+  } finally {
+    if(btn){ btn.disabled=false; btn.innerHTML='✨ Améliorer avec l\'IA'; }
+  }
 }
 
 function savePromptPremium() {
@@ -2267,7 +2359,7 @@ async function genererAvecIA() {
     const ecart    = document.getElementById('ecartRange').value;
     const scoreMin = document.getElementById('scoreRange').value;
     const maxM     = document.getElementById('maxRange').value;
-    const provLabel= {anthropic:'Claude',openai:'GPT',mistral:'Mistral',groq:'Groq',custom:'Custom'}[settings.llm_provider]||'LLM';
+    const provLabel= {anthropic:'Claude',openai:'GPT',google:'Gemini',mistral:'Mistral',groq:'Groq',custom:'Custom'}[settings.llm_provider]||'LLM';
 
     const prompt = `Tu es expert en matching amoureux pour Blendora.
 L'opérateur te donne des instructions et un contexte spécifique pour cette session de matching.
